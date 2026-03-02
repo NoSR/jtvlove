@@ -124,7 +124,7 @@ const SuperUsers: React.FC = () => {
                      <span className={`size-3 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.6)] ${user.status === 'banned' ? 'bg-red-500' : 'bg-green-500'}`}></span>
                   </div>
 
-                  <div className="p-8 pb-0">
+                  <div className="p-8 pb-10">
                      <div className="flex items-center gap-6 mb-6">
                         <div className="size-20 rounded-[2rem] bg-zinc-800 p-1 ring-1 ring-white/10 overflow-hidden">
                            <img src={`https://picsum.photos/seed/${user.id}/200/200`} className="w-full h-full object-cover rounded-[1.8rem]" alt={user.nickname} />
@@ -153,6 +153,12 @@ const SuperUsers: React.FC = () => {
                            <p className="text-[8px] font-black text-gray-500 uppercase mb-1">Joined</p>
                            <p className="font-black text-[9px] text-zinc-400">{new Date(user.created_at).toLocaleDateString()}</p>
                         </div>
+                     </div>
+
+                     {/* Premium Footer Decoration */}
+                     <div className="mt-8 pt-6 border-t border-white/5 flex justify-between items-center opacity-30">
+                        <p className="text-[7px] font-black uppercase tracking-[0.3em] text-zinc-500 italic">Security Status: Identified</p>
+                        <span className="material-symbols-outlined text-[10px] text-zinc-500">verified_user</span>
                      </div>
                   </div>
 
