@@ -47,7 +47,7 @@ const SuperPartners: React.FC = () => {
          setEditForm({ name: '', region: 'Manila', address: '', phone: '', rating: 0, description: '' });
       } else {
          const firstVenueId = venues && venues.length > 0 ? venues[0].id : '';
-         setEditForm({ nickname: '', venue_id: firstVenueId, birthday: '01. Jan. 2000.', phone: '', description: '', status: 'active', grade: 'PRO' });
+         setEditForm({ nickname: '', venueId: firstVenueId, birthday: '01. Jan. 2000.', phone: '', description: '', status: 'active', grade: 'PRO' });
       }
       setShowDetailModal(true);
    };
@@ -283,9 +283,13 @@ const SuperPartners: React.FC = () => {
                                  </div>
                                  <div className="space-y-3">
                                     <label className="text-[10px] font-black text-gray-500 uppercase ml-2">Venue Association</label>
-                                    <select value={editForm.venue_id || ''} onChange={e => setEditForm({ ...editForm, venue_id: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold outline-none focus:border-red-600">
-                                       <option value="">Select Venue</option>
-                                       {venues.map((v: any) => <option key={v.id} value={v.id}>{v.name}</option>)}
+                                    <select value={editForm.venueId || editForm.venue_id || ''} onChange={e => setEditForm({ ...editForm, venueId: e.target.value, venue_id: e.target.value })} className="w-full bg-[#1b180d] border border-white/20 rounded-2xl px-6 py-4 text-white font-bold outline-none focus:border-red-600 shadow-lg">
+                                       <option value="" className="bg-zinc-900 text-white">Select Venue</option>
+                                       {venues.map((v: any) => (
+                                          <option key={v.id} value={v.id} className="bg-zinc-900 text-white">
+                                             {v.name}
+                                          </option>
+                                       ))}
                                     </select>
                                  </div>
                                  <div className="space-y-3">
