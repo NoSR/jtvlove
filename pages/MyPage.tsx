@@ -26,6 +26,15 @@ const MyPage: React.FC = () => {
     notifications: 0
   });
 
+  // Service States
+  const [showActivityModal, setShowActivityModal] = useState(false);
+  const [activities, setActivities] = useState<any[]>([]);
+  const [showInquiryModal, setShowInquiryModal] = useState(false);
+  const [inquiries, setInquiries] = useState<any[]>([]);
+  const [inquiryForm, setInquiryForm] = useState({ title: '', content: '' });
+  const [showDocModal, setShowDocModal] = useState(false);
+  const [docData, setDocData] = useState({ title: '', content: '' });
+
   useEffect(() => {
     if (!authUser) {
       navigate('/login');
@@ -111,6 +120,49 @@ const MyPage: React.FC = () => {
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  // Service Handlers
+  const handleShowActivities = async () => {
+    if (!user) return;
+    setShowActivityModal(true);
+    try {
+      const data = await apiService.getUserActivities(user.id);
+      setActivities(data);
+    } catch (err) { console.error(err); }
+  };
+
+  const handleShowInquiry = async () => {
+    if (!user) return;
+    setShowInquiryModal(true);
+    try {
+      const data = await apiService.getInquiries(user.id);
+      setInquiries(data);
+    } catch (err) { console.error(err); }
+  };
+
+  const handleSubmitInquiry = async () => {
+    if (!user || !inquiryForm.title || !inquiryForm.content) return;
+    setIsUpdating(true);
+    try {
+      const result = await apiService.createInquiry({ userId: user.id, ...inquiryForm });
+      if (result.success) {
+        setInquiryForm({ title: '', content: '' });
+        const data = await apiService.getInquiries(user.id);
+        setInquiries(data);
+      }
+    } catch (err) { alert('Failed to submit inquiry'); }
+    finally { setIsUpdating(false); }
+  };
+
+  const handleShowDoc = async (type: 'guidelines' | 'terms') => {
+    const title = type === 'guidelines' ? 'User Guidelines' : 'Terms of Service';
+    setDocData({ title, content: 'Loading...' });
+    setShowDocModal(true);
+    try {
+      const data = await apiService.getSiteDoc(type);
+      setDocData({ title, content: data.content });
+    } catch (err) { setDocData({ title, content: 'Failed to load content.' }); }
   };
 
   if (loading || !user) return <div className="flex items-center justify-center min-h-[60vh] text-primary animate-pulse font-black uppercase tracking-widest text-xs">Accessing Data...</div>;
@@ -337,12 +389,12 @@ const MyPage: React.FC = () => {
                 <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em] mb-8 px-2">Activity Universe</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
-                    { name: 'Activity History', icon: 'browse_gallery', color: 'bg-blue-500' },
-                    { name: '1:1 Query Center', icon: 'chat_bubble', color: 'bg-primary' },
-                    { name: 'User Guidelines', icon: 'menu_book', color: 'bg-emerald-500' },
-                    { name: 'Terms of Service', icon: 'gavel', color: 'bg-zinc-500' }
+                    { name: 'Activity History', icon: 'browse_gallery', color: 'bg-blue-500', action: handleShowActivities },
+                    { name: '1:1 Query Center', icon: 'chat_bubble', color: 'bg-primary', action: handleShowInquiry },
+                    { name: 'User Guidelines', icon: 'menu_book', color: 'bg-emerald-500', action: () => handleShowDoc('guidelines') },
+                    { name: 'Terms of Service', icon: 'gavel', color: 'bg-zinc-500', action: () => handleShowDoc('terms') }
                   ].map(item => (
-                    <Link key={item.name} to="#" className="flex items-center gap-6 p-6 bg-zinc-50 dark:bg-white/5 rounded-[2rem] border border-zinc-100 dark:border-transparent hover:border-primary/30 transition-all group">
+                    <button key={item.name} onClick={item.action} className="flex items-center gap-6 p-6 bg-zinc-50 dark:bg-white/5 rounded-[2rem] border border-zinc-100 dark:border-transparent hover:border-primary/30 transition-all group w-full text-left">
                       <div className={`size-14 rounded-2xl ${item.color}/10 flex items-center justify-center text-zinc-400 group-hover:text-primary transition-colors`}>
                         <span className="material-symbols-outlined text-2xl">{item.icon}</span>
                       </div>
@@ -351,7 +403,7 @@ const MyPage: React.FC = () => {
                         <p className="text-[9px] font-bold text-zinc-400">View details & record</p>
                       </div>
                       <span className="material-symbols-outlined ml-auto text-zinc-200 dark:text-zinc-800 group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
-                    </Link>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -445,7 +497,118 @@ const MyPage: React.FC = () => {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
 
+      {/* Activity History Modal */}
+      {showActivityModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setShowActivityModal(false)}>
+          <div className="bg-white dark:bg-zinc-900 w-full max-w-lg max-h-[80vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between sticky top-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md z-10">
+              <h3 className="font-black text-lg">Activity History</h3>
+              <button onClick={() => setShowActivityModal(false)} className="w-10 h-10 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
+                <span className="material-symbols-outlined text-sm">close</span>
+              </button>
+            </div>
+            <div className="overflow-y-auto p-4 space-y-3">
+              {activities.length > 0 ? activities.map((act, i) => (
+                <div key={i} className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-transparent flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${act.type === 'xp' ? 'bg-blue-500/10 text-blue-500' : 'bg-primary/10 text-primary'}`}>
+                    <span className="material-symbols-outlined">{act.type === 'xp' ? 'bolt' : 'payments'}</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-black">{act.title}</p>
+                    <p className="text-[10px] text-zinc-400 uppercase font-bold">{new Date(act.created_at).toLocaleString()}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className={`text-sm font-black ${act.type === 'xp' ? 'text-blue-500' : 'text-primary'}`}>
+                      {act.type === 'xp' ? `+${act.amount} XP` : `+${act.amount.toLocaleString()} P`}
+                    </p>
+                  </div>
+                </div>
+              )) : <div className="py-20 text-center text-zinc-400 font-bold uppercase tracking-widest text-[10px]">No recent activity</div>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Inquiry Center Modal */}
+      {showInquiryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setShowInquiryModal(false)}>
+          <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl max-h-[85vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between sticky top-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md z-10">
+              <h3 className="font-black text-lg">1:1 Query Center</h3>
+              <button onClick={() => setShowInquiryModal(false)} className="w-10 h-10 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
+                <span className="material-symbols-outlined text-sm">close</span>
+              </button>
+            </div>
+            <div className="overflow-y-auto p-6 space-y-8">
+              {/* Form Section */}
+              <div className="bg-zinc-50 dark:bg-zinc-800/50 p-6 rounded-[2rem] border border-zinc-100 dark:border-white/5 space-y-4">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">New Inquiry</h4>
+                <input
+                  placeholder="Subject of your query..."
+                  value={inquiryForm.title}
+                  onChange={e => setInquiryForm({ ...inquiryForm, title: e.target.value })}
+                  className="w-full bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-white/5 outline-none focus:border-primary text-sm font-black"
+                />
+                <textarea
+                  placeholder="Describe your request in detail..."
+                  value={inquiryForm.content}
+                  onChange={e => setInquiryForm({ ...inquiryForm, content: e.target.value })}
+                  rows={4}
+                  className="w-full bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-white/5 outline-none focus:border-primary text-sm font-black resize-none"
+                />
+                <button
+                  onClick={handleSubmitInquiry}
+                  disabled={isUpdating || !inquiryForm.title || !inquiryForm.content}
+                  className="w-full bg-primary py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-[#1b180d] hover:opacity-90 transition-all disabled:opacity-50"
+                >
+                  Submit Query
+                </button>
+              </div>
+
+              {/* History Section */}
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Previous Inquiries</h4>
+                {inquiries.length > 0 ? inquiries.map((inq, i) => (
+                  <div key={i} className="p-5 rounded-2xl bg-white dark:bg-zinc-800 border border-zinc-100 dark:border-white/5 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <h5 className="text-sm font-black">{inq.title}</h5>
+                      <span className={`text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-tighter ${inq.status === 'answered' ? 'bg-green-500/10 text-green-500' : 'bg-primary/20 text-primary-dark font-black'}`}>
+                        {inq.status}
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-500 leading-relaxed">{inq.content}</p>
+                    {inq.response && (
+                      <div className="mt-4 p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border-l-4 border-primary">
+                        <p className="text-[8px] font-black uppercase text-primary mb-1">Admin Response</p>
+                        <p className="text-xs italic leading-relaxed">{inq.response}</p>
+                      </div>
+                    )}
+                    <p className="text-[8px] font-black text-zinc-300 uppercase">{new Date(inq.created_at).toLocaleDateString()}</p>
+                  </div>
+                )) : <div className="py-10 text-center text-zinc-300 text-[10px] font-black uppercase tracking-[0.2em]">No inquiry history found</div>}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Static Docs Modal (Guidelines & Terms) */}
+      {showDocModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setShowDocModal(false)}>
+          <div className="bg-white dark:bg-zinc-900 w-full max-w-3xl max-h-[85vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between sticky top-0 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md z-10">
+              <h3 className="font-black text-lg">{docData.title}</h3>
+              <button onClick={() => setShowDocModal(false)} className="w-10 h-10 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
+                <span className="material-symbols-outlined text-sm">close</span>
+              </button>
+            </div>
+            <div className="overflow-y-auto p-10 prose prose-sm dark:prose-invert max-w-none">
+              <div dangerouslySetInnerHTML={{ __html: docData.content }} />
+            </div>
           </div>
         </div>
       )}

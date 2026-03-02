@@ -867,6 +867,55 @@ export const apiService = {
       console.error('deleteBoardConfig error:', error);
       return false;
     }
+  },
+
+  // Service Tab Functions
+  async getUserActivities(userId: string): Promise<any[]> {
+    try {
+      const response = await fetch(`${API_BASE}/user-activities?userId=${encodeURIComponent(userId)}`);
+      if (!response.ok) throw new Error('Activities not found');
+      return await response.json();
+    } catch (error) {
+      console.error('getUserActivities error:', error);
+      return [];
+    }
+  },
+
+  async getInquiries(userId: string): Promise<any[]> {
+    try {
+      const response = await fetch(`${API_BASE}/user-inquiries?userId=${encodeURIComponent(userId)}`);
+      if (!response.ok) throw new Error('Inquiries not found');
+      return await response.json();
+    } catch (error) {
+      console.error('getInquiries error:', error);
+      return [];
+    }
+  },
+
+  async createInquiry(data: { userId: string; title: string; content: string }): Promise<{ success: boolean; id?: string }> {
+    try {
+      const response = await fetch(`${API_BASE}/user-inquiries`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to create inquiry');
+      return await response.json();
+    } catch (error) {
+      console.error('createInquiry error:', error);
+      return { success: false };
+    }
+  },
+
+  async getSiteDoc(type: 'guidelines' | 'terms'): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE}/site-docs?type=${encodeURIComponent(type)}`);
+      if (!response.ok) throw new Error('Document not found');
+      return await response.json();
+    } catch (error) {
+      console.error('getSiteDoc error:', error);
+      return { content: '내용을 불러올 수 없습니다.' };
+    }
   }
 };
 
