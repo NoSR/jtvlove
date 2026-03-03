@@ -31,6 +31,11 @@ const SuperPartners: React.FC = () => {
    const [isSaving, setIsSaving] = useState(false);
    const [venueActiveTab, setVenueActiveTab] = useState<'basic' | 'media' | 'menu' | 'tables_rooms'>('basic');
 
+   // Menu Items Modal
+   const [showMenuModal, setShowMenuModal] = useState(false);
+   const [menuEditForm, setMenuEditForm] = useState<{ id?: number, name: string, price: string, category: string, image: string }>({ name: '', price: '', category: '', image: '' });
+   const [selectedMenuIdx, setSelectedMenuIdx] = useState<number | null>(null);
+
    useEffect(() => {
       loadData();
    }, [activeTab]);
@@ -285,6 +290,46 @@ const SuperPartners: React.FC = () => {
       } else {
          setEditForm({ ...editForm, languages: [...current, lang] });
       }
+   };
+
+   // Menu Handlers
+   const handleAddMenu = () => {
+      setSelectedMenuIdx(null);
+      setMenuEditForm({
+         name: '',
+         price: '',
+         category: editForm.tags?.[0] || '',
+         image: ''
+      });
+      setShowMenuModal(true);
+   };
+
+   const handleEditMenu = (item: any, idx: number) => {
+      setSelectedMenuIdx(idx);
+      setMenuEditForm({ ...item });
+      setShowMenuModal(true);
+   };
+
+   const handleSaveMenu = () => {
+      if (!menuEditForm.name || !menuEditForm.price) {
+         alert("Please enter both name and price.");
+         return;
+      }
+
+      const newMenu = [...(editForm.menu || [])];
+      const menuItem = {
+         ...menuEditForm,
+         id: menuEditForm.id || Date.now()
+      };
+
+      if (selectedMenuIdx !== null) {
+         newMenu[selectedMenuIdx] = menuItem;
+      } else {
+         newMenu.push(menuItem);
+      }
+
+      setEditForm({ ...editForm, menu: newMenu });
+      setShowMenuModal(false);
    };
 
    return (
@@ -618,26 +663,36 @@ const SuperPartners: React.FC = () => {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                        {(editForm.menu || []).map((m: any, idx: number) => (
-                                          <div key={idx} className="bg-black/40 p-6 rounded-[2rem] border border-white/5 flex gap-6 items-center group">
-                                             <img src={m.image} className="size-24 rounded-2xl object-cover" />
-                                             <div className="flex-1">
-                                                <h5 className="font-black text-sm uppercase italic">{m.name}</h5>
-                                                <p className="text-red-500 font-black text-xs mt-1">PHP {m.price}</p>
-                                                <p className="text-[10px] text-gray-500 font-bold uppercase mt-1">{m.category}</p>
+                                          <div key={idx} className="bg-black/40 p-6 rounded-[2rem] border border-white/5 flex gap-6 items-center group relative overflow-hidden">
+                                             <div className="size-24 rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 flex-shrink-0">
+                                                {m.image ? (
+                                                   <img src={m.image} className="size-full object-cover" />
+                                                ) : (
+                                                   <div className="size-full flex items-center justify-center text-gray-700">
+                                                      <span className="material-symbols-outlined text-3xl">restaurant</span>
+                                                   </div>
+                                                )}
                                              </div>
-                                             <button onClick={() => setEditForm({ ...editForm, menu: editForm.menu.filter((_: any, i: number) => i !== idx) })} className="opacity-0 group-hover:opacity-100 transition-opacity size-10 bg-white/5 hover:bg-red-600 rounded-full flex items-center justify-center"><span className="material-symbols-outlined text-sm">delete</span></button>
+                                             <div className="flex-1">
+                                                <h5 className="font-black text-sm uppercase italic text-white">{m.name}</h5>
+                                                <p className="text-red-500 font-black text-xs mt-1">PHP {m.price}</p>
+                                                <p className="text-[10px] text-gray-500 font-bold uppercase mt-1 px-2 py-0.5 bg-white/5 rounded-full w-fit border border-white/5">{m.category}</p>
+                                             </div>
+                                             <div className="flex flex-col gap-2">
+                                                <button onClick={() => handleEditMenu(m, idx)} className="opacity-0 group-hover:opacity-100 transition-opacity size-9 bg-white/5 hover:bg-zinc-100 hover:text-black rounded-xl flex items-center justify-center border border-white/10">
+                                                   <span className="material-symbols-outlined text-sm">edit</span>
+                                                </button>
+                                                <button onClick={() => setEditForm({ ...editForm, menu: editForm.menu.filter((_: any, i: number) => i !== idx) })} className="opacity-0 group-hover:opacity-100 transition-opacity size-9 bg-white/5 hover:bg-red-600 hover:text-white rounded-xl flex items-center justify-center border border-white/10">
+                                                   <span className="material-symbols-outlined text-sm">delete</span>
+                                                </button>
+                                             </div>
                                           </div>
                                        ))}
-                                       <button onClick={() => {
-                                          const name = prompt("Dish Name?");
-                                          const price = prompt("Price (PHP)?");
-                                          const category = prompt("Category?", editForm.tags?.[0] || "");
-                                          if (name && price) {
-                                             setEditForm({ ...editForm, menu: [...(editForm.menu || []), { id: Date.now(), name, price, category, image: '' }] });
-                                          }
-                                       }} className="rounded-[2.5rem] border-2 border-dashed border-white/10 hover:border-red-600/50 transition-all flex flex-col items-center justify-center p-10 gap-3 grayscale hover:grayscale-0">
-                                          <span className="material-symbols-outlined text-3xl">restaurant_menu</span>
-                                          <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Append New Neural Delicacy</span>
+                                       <button onClick={handleAddMenu} className="rounded-[2.5rem] border-2 border-dashed border-white/10 hover:border-red-600/50 transition-all flex flex-col items-center justify-center p-10 gap-3 grayscale hover:grayscale-0 bg-black/20 group">
+                                          <div className="size-16 rounded-full bg-white/5 flex items-center justify-center group-hover:scale-110 group-hover:bg-red-600/10 transition-all">
+                                             <span className="material-symbols-outlined text-3xl text-gray-500 group-hover:text-red-500">restaurant_menu</span>
+                                          </div>
+                                          <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 group-hover:text-white">Append New Neural Delicacy</span>
                                        </button>
                                     </div>
                                  </div>
@@ -838,6 +893,70 @@ const SuperPartners: React.FC = () => {
                               'Synchronize'
                            )}
                         </button>
+                     </div>
+                  </motion.div>
+               </div>
+            )}
+         </AnimatePresence>
+
+         {/* MENU ITEM MODAL */}
+         <AnimatePresence>
+            {showMenuModal && (
+               <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowMenuModal(false)} className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+                  <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-zinc-950 border border-white/10 w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl z-10 flex flex-col" >
+                     <div className="p-8 border-b border-white/5 flex items-center justify-between">
+                        <h4 className="text-lg font-black uppercase italic tracking-widest text-white">{selectedMenuIdx !== null ? 'Edit' : 'Add'} Menu Item</h4>
+                        <button onClick={() => setShowMenuModal(false)} className="size-10 rounded-xl bg-white/5 text-white flex items-center justify-center hover:bg-red-600 transition-all"><span className="material-symbols-outlined text-sm">close</span></button>
+                     </div>
+                     <div className="p-8 space-y-6">
+                        <div className="space-y-4">
+                           <label className="text-[10px] font-black text-red-500 uppercase tracking-widest ml-1">Dish Image</label>
+                           <div className="relative group aspect-video rounded-3xl border-2 border-dashed border-white/10 overflow-hidden bg-black/40 flex items-center justify-center">
+                              {menuEditForm.image ? (
+                                 <img src={menuEditForm.image} className="size-full object-cover" />
+                              ) : (
+                                 <span className="material-symbols-outlined text-4xl text-gray-700">restaurant</span>
+                              )}
+                              <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                                 <span className="text-[10px] font-black uppercase tracking-widest bg-white text-black px-6 py-3 rounded-2xl">Upload Photo</span>
+                                 <input type="file" className="hidden" accept="image/*" onChange={e => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                       const reader = new FileReader();
+                                       reader.onloadend = () => setMenuEditForm({ ...menuEditForm, image: reader.result as string });
+                                       reader.readAsDataURL(file);
+                                    }
+                                 }} />
+                              </label>
+                           </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-6">
+                           <div className="space-y-2">
+                              <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Dish Name</label>
+                              <input type="text" value={menuEditForm.name} onChange={e => setMenuEditForm({ ...menuEditForm, name: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white font-bold" placeholder="Enter dish name..." />
+                           </div>
+                           <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                 <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Price (PHP)</label>
+                                 <input type="text" value={menuEditForm.price} onChange={e => setMenuEditForm({ ...menuEditForm, price: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white font-bold" placeholder="5000" />
+                              </div>
+                              <div className="space-y-2">
+                                 <label className="text-[10px] font-black text-gray-500 uppercase ml-1">Category</label>
+                                 <select value={menuEditForm.category} onChange={e => setMenuEditForm({ ...menuEditForm, category: e.target.value })} className="w-full bg-zinc-900 border border-white/10 rounded-2xl px-5 py-4 text-white font-bold appearance-none">
+                                    {(editForm.tags || []).map((cat: string) => (
+                                       <option key={cat} value={cat}>{cat}</option>
+                                    ))}
+                                 </select>
+                              </div>
+                           </div>
+                        </div>
+
+                        <div className="flex gap-4 pt-4">
+                           <button onClick={() => setShowMenuModal(false)} className="flex-1 py-4 border border-white/10 text-gray-400 rounded-2xl font-black uppercase text-[10px] hover:bg-white/5 transition-all">Cancel</button>
+                           <button onClick={handleSaveMenu} className="flex-1 py-4 bg-red-600 text-white rounded-2xl font-black uppercase text-[10px] shadow-lg shadow-red-600/20 hover:scale-[1.02] transition-all">Confirm Menu</button>
+                        </div>
                      </div>
                   </motion.div>
                </div>
