@@ -269,14 +269,20 @@ const SuperPartners: React.FC = () => {
       }
    };
 
-   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
-         const reader = new FileReader();
-         reader.onloadend = () => {
-            setEditForm({ ...editForm, image: reader.result as string });
-         };
-         reader.readAsDataURL(file);
+         try {
+            const url = await apiService.uploadImage(file);
+            if (url) {
+               setEditForm({ ...editForm, image: url });
+            } else {
+               alert("이미지 압축 및 업로드에 실패했습니다.");
+            }
+         } catch (err) {
+            console.error("Image upload error", err);
+            alert("이미지 처리 중 오류가 발생했습니다.");
+         }
       }
    };
 
