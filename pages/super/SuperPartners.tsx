@@ -233,6 +233,31 @@ const SuperPartners: React.FC = () => {
       }
    };
 
+   const handleDelete = async (item: any) => {
+      if (!window.confirm(`Are you sure you want to delete ${activeTab === 'venues' ? item.name : item.nickname || item.name}? All related history will be removed.`)) {
+         return;
+      }
+
+      setLoading(true);
+      try {
+         const success = activeTab === 'venues'
+            ? await apiService.deleteVenue(item.id)
+            : await apiService.deleteCCA(item.id);
+
+         if (success) {
+            alert("Deleted successfully from the neural archives.");
+            loadData();
+         } else {
+            alert("Deletion failed. Please check the network bridge.");
+         }
+      } catch (err) {
+         console.error("Delete error", err);
+         alert("A critical error occurred during the deletion sequence.");
+      } finally {
+         setLoading(false);
+      }
+   };
+
    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
@@ -330,6 +355,9 @@ const SuperPartners: React.FC = () => {
                                     </button>
                                     <button onClick={() => handleOpenDetail(item)} className="px-4 py-2 bg-red-600/10 text-red-500 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-2 border border-red-500/20">
                                        <span className="material-symbols-outlined text-xs">settings</span> Detail
+                                    </button>
+                                    <button onClick={() => handleDelete(item)} className="size-9 bg-zinc-800 text-gray-500 rounded-xl hover:bg-red-600 hover:text-white transition-all flex items-center justify-center border border-white/5">
+                                       <span className="material-symbols-outlined text-sm">delete</span>
                                     </button>
                                  </div>
                               </td>

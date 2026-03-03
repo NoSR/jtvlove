@@ -238,5 +238,25 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
     }
   }
 
+  // DELETE: CCA 삭제
+  if (request.method === 'DELETE') {
+    try {
+      if (!id) {
+        return new Response(JSON.stringify({ error: "CCA ID is required" }), { status: 400 });
+      }
+
+      await env.DB.prepare("DELETE FROM ccas WHERE id = ?").bind(id).run();
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (error: any) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  }
+
   return new Response("Method not allowed", { status: 405 });
 };

@@ -126,6 +126,18 @@ export const apiService = {
     }
   },
 
+  async deleteVenue(id: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${API_BASE}/venues?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('deleteVenue error:', error);
+      return false;
+    }
+  },
+
   // CCAs
   async getCCAs(): Promise<CCA[]> {
     try {
@@ -166,6 +178,47 @@ export const apiService = {
     } catch (error: any) {
       console.error('updateCCAProfile error:', error);
       return { success: false, error: error.message };
+    }
+  },
+
+  async updateCCA(data: any): Promise<boolean> {
+    try {
+      const id = data.id || '';
+      const response = await fetch(`${API_BASE}/ccas/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('updateCCA error:', error);
+      return false;
+    }
+  },
+
+  async createCCA(data: any): Promise<boolean> {
+    try {
+      const response = await fetch(`${API_BASE}/ccas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('createCCA error:', error);
+      return false;
+    }
+  },
+
+  async deleteCCA(id: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${API_BASE}/ccas/${id}`, {
+        method: 'DELETE',
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('deleteCCA error:', error);
+      return false;
     }
   },
 
@@ -247,7 +300,7 @@ export const apiService = {
 
   async incrementPostViews(id: string): Promise<void> {
     try {
-      await fetch(`${API_BASE}/posts?id=${encodeURIComponent(id)}&action=view`, {
+      await fetch(`${API_BASE} / posts ? id = ${encodeURIComponent(id)}& action=view`, {
         method: 'PATCH'
       });
     } catch (error) {
@@ -608,35 +661,6 @@ export const apiService = {
     } catch (error) {
       console.error('getCCAMessages error:', error);
       return [];
-    }
-  },
-
-  async updateCCA(data: any): Promise<boolean> {
-    try {
-      const id = data.id || '';
-      const response = await fetch(`${API_BASE}/ccas/${id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      return response.ok;
-    } catch (error) {
-      console.error('updateCCA error:', error);
-      return false;
-    }
-  },
-
-  async createCCA(data: any): Promise<boolean> {
-    try {
-      const response = await fetch(`${API_BASE}/ccas`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      return response.ok;
-    } catch (error) {
-      console.error('createCCA error:', error);
-      return false;
     }
   },
 

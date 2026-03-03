@@ -136,5 +136,25 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
     }
   }
 
+  // DELETE: 업소 삭제
+  if (request.method === "DELETE") {
+    try {
+      if (!idParam) {
+        return new Response(JSON.stringify({ error: "Venue ID is required" }), { status: 400 });
+      }
+
+      await env.DB.prepare("DELETE FROM venues WHERE id = ?").bind(idParam).run();
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (error: any) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  }
+
   return new Response("Method not allowed", { status: 405 });
 };
