@@ -44,11 +44,19 @@ const VenueList: React.FC = () => {
 
   // activeTab에 따른 필터링 (Others인 경우 정의된 필터가 아닌 나머지를 보여줌)
   const filteredVenues = venues.filter(venue => {
-    const venueRegion = typeof venue.region === 'string' ? venue.region : '';
+    const region = (venue.region || '').toUpperCase();
+    const tabUpper = activeTab.toUpperCase();
+
     if (activeTab === 'Others') {
-      return !['Manila', 'Clark', 'Angeles', 'Cebu'].some(r => venueRegion.includes(r));
+      // Manila, Clark, Angeles, Cebu 중 하나라도 포함되지 않은 것들
+      return !['MANILA', 'CLARK', 'ANGELES', 'CEBU'].some(r => region.includes(r));
     }
-    return venueRegion.includes(activeTab) || (activeTab === 'Clark/Angeles' && (venueRegion.includes('Clark') || venueRegion.includes('Angeles')));
+
+    if (activeTab === 'Clark/Angeles') {
+      return region.includes('CLARK') || region.includes('ANGELES');
+    }
+
+    return region.includes(tabUpper);
   });
 
   if (isLoading) {

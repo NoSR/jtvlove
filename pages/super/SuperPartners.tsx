@@ -133,11 +133,16 @@ const SuperPartners: React.FC = () => {
 
    const handleOpenDetail = (item: any) => {
       setIsCreateMode(false);
-      setSelectedItem(item);
+      // Region normalization for legacy data
+      let normalizedRegion = item.region;
+      if (item.region === 'MANILA') normalizedRegion = 'Manila';
+      else if (item.region === 'CLARK' || item.region === 'CLARK/ANGELES') normalizedRegion = 'Clark/Angeles';
+      else if (item.region === 'CEBU') normalizedRegion = 'Cebu';
+      else if (item.region === 'ETC' || item.region === 'OTHERS') normalizedRegion = 'Others';
 
-      // Map backend snake_case to frontend camelCase for the form if needed
       const mappedItem = {
          ...item,
+         region: normalizedRegion,
          venueId: item.venue_id,
          realNameFirst: item.real_name_first,
          realNameMiddle: item.real_name_middle,
@@ -564,11 +569,11 @@ const SuperPartners: React.FC = () => {
                                           </div>
                                           <div className="space-y-4">
                                              <label className="text-[10px] font-black text-red-500 uppercase tracking-widest ml-1">Region</label>
-                                             <select value={editForm.region || 'MANILA'} onChange={e => setEditForm({ ...editForm, region: e.target.value })} className="w-full bg-zinc-900 border border-white/10 rounded-2xl px-6 py-5 text-white font-black">
-                                                <option value="MANILA">MANILA</option>
-                                                <option value="CLARK">CLARK/ANGELES</option>
-                                                <option value="CEBU">CEBU</option>
-                                                <option value="ETC">OTHERS</option>
+                                             <select value={editForm.region || 'Manila'} onChange={e => setEditForm({ ...editForm, region: e.target.value })} className="w-full bg-zinc-900 border border-white/10 rounded-2xl px-6 py-5 text-white font-black">
+                                                <option value="Manila">Manila</option>
+                                                <option value="Clark/Angeles">Clark/Angeles</option>
+                                                <option value="Cebu">Cebu</option>
+                                                <option value="Others">Others</option>
                                              </select>
                                           </div>
                                           <div className="space-y-4">

@@ -15,7 +15,13 @@ const SuperSiteSettings: React.FC = () => {
     favicon_url: '',
     venues_hero_image: '',
     venues_hero_title: '',
-    venues_hero_subtitle: ''
+    venues_hero_subtitle: '',
+    ccas_hero_image: '',
+    ccas_hero_title: '',
+    ccas_hero_subtitle: '',
+    notice_hero_image: '',
+    notice_hero_title: '',
+    notice_hero_subtitle: ''
   });
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
 
@@ -35,7 +41,13 @@ const SuperSiteSettings: React.FC = () => {
             favicon_url: data.favicon_url || '',
             venues_hero_image: data.venues_hero_image || '',
             venues_hero_title: data.venues_hero_title || '',
-            venues_hero_subtitle: data.venues_hero_subtitle || ''
+            venues_hero_subtitle: data.venues_hero_subtitle || '',
+            ccas_hero_image: data.ccas_hero_image || '',
+            ccas_hero_title: data.ccas_hero_title || '',
+            ccas_hero_subtitle: data.ccas_hero_subtitle || '',
+            notice_hero_image: data.notice_hero_image || '',
+            notice_hero_title: data.notice_hero_title || '',
+            notice_hero_subtitle: data.notice_hero_subtitle || ''
           });
         }
       } catch (err) {
@@ -223,10 +235,10 @@ const SuperSiteSettings: React.FC = () => {
         />
       </div>
 
-      {/* Banner Settings Block */}
+      {/* Venue Banner Settings */}
       <div className="bg-zinc-900 p-10 rounded-[2.5rem] border border-white/5 space-y-8">
         <div className="flex items-center gap-4">
-          <div className="size-12 bg-purple-600 rounded-2xl flex items-center justify-center text-white shadow-[0_0_20px_rgba(147,51,234,0.3)]"><span className="material-symbols-outlined">view_carousel</span></div>
+          <div className="size-12 bg-purple-600 rounded-2xl flex items-center justify-center text-white shadow-[0_0_20px_rgba(147,51,234,0.3)]"><span className="material-symbols-outlined">apartment</span></div>
           <h3 className="text-xl font-black">Venues Page Hero Banner</h3>
         </div>
         <div className="space-y-6">
@@ -240,35 +252,112 @@ const SuperSiteSettings: React.FC = () => {
               className="w-full bg-black border-zinc-800 rounded-xl px-4 py-3 font-bold text-sm focus:ring-1 focus:ring-purple-500 text-white"
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hero Title</label>
-            <input
-              type="text"
-              value={settings.venues_hero_title}
-              onChange={(e) => setSettings({ ...settings, venues_hero_title: e.target.value })}
-              placeholder="e.g. 이달의 추천 JTV"
-              className="w-full bg-black border-zinc-800 rounded-xl px-4 py-3 font-bold text-sm focus:ring-1 focus:ring-purple-500 text-white"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hero Subtitle</label>
-            <input
-              type="text"
-              value={settings.venues_hero_subtitle}
-              onChange={(e) => setSettings({ ...settings, venues_hero_subtitle: e.target.value })}
-              placeholder="e.g. 최고의 서비스와 품격을 보장합니다."
-              className="w-full bg-black border-zinc-800 rounded-xl px-4 py-3 font-bold text-sm focus:ring-1 focus:ring-purple-500 text-white"
-            />
-          </div>
-          {settings.venues_hero_image && (
-            <div className="mt-4 rounded-xl overflow-hidden border border-zinc-800 max-h-48 relative">
-              <img src={settings.venues_hero_image} className="w-full h-full object-cover" alt="Hero Preview" />
-              <div className="absolute inset-0 bg-black/40 flex flex-col justify-center items-center p-4 text-center">
-                <h2 className="text-2xl font-bold text-white mb-2">{settings.venues_hero_title}</h2>
-                <p className="text-sm text-gray-200">{settings.venues_hero_subtitle}</p>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hero Title</label>
+              <input
+                type="text"
+                value={settings.venues_hero_title}
+                onChange={(e) => setSettings({ ...settings, venues_hero_title: e.target.value })}
+                placeholder="e.g. 이달의 추천 JTV"
+                className="w-full bg-black border-zinc-800 rounded-xl px-4 py-3 font-bold text-sm focus:ring-1 focus:ring-purple-500 text-white"
+              />
             </div>
-          )}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hero Subtitle</label>
+              <input
+                type="text"
+                value={settings.venues_hero_subtitle}
+                onChange={(e) => setSettings({ ...settings, venues_hero_subtitle: e.target.value })}
+                placeholder="e.g. 최고의 서비스와 품격을 보장합니다."
+                className="w-full bg-black border-zinc-800 rounded-xl px-4 py-3 font-bold text-sm focus:ring-1 focus:ring-purple-500 text-white"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CCA Banner Settings */}
+      <div className="bg-zinc-900 p-10 rounded-[2.5rem] border border-white/5 space-y-8">
+        <div className="flex items-center gap-4">
+          <div className="size-12 bg-amber-600 rounded-2xl flex items-center justify-center text-white shadow-[0_0_20px_rgba(217,119,6,0.3)]"><span className="material-symbols-outlined">groups</span></div>
+          <h3 className="text-xl font-black">CCA List Page Hero Banner</h3>
+        </div>
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hero Image URL</label>
+            <input
+              type="url"
+              value={settings.ccas_hero_image}
+              onChange={(e) => setSettings({ ...settings, ccas_hero_image: e.target.value })}
+              placeholder="https://example.com/cca-banner.jpg"
+              className="w-full bg-black border-zinc-800 rounded-xl px-4 py-3 font-bold text-sm focus:ring-1 focus:ring-amber-500 text-white"
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hero Title</label>
+              <input
+                type="text"
+                value={settings.ccas_hero_title}
+                onChange={(e) => setSettings({ ...settings, ccas_hero_title: e.target.value })}
+                placeholder="e.g. Featured CCAs"
+                className="w-full bg-black border-zinc-800 rounded-xl px-4 py-3 font-bold text-sm focus:ring-1 focus:ring-amber-500 text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hero Subtitle</label>
+              <input
+                type="text"
+                value={settings.ccas_hero_subtitle}
+                onChange={(e) => setSettings({ ...settings, ccas_hero_subtitle: e.target.value })}
+                placeholder="e.g. Discover our premium associates."
+                className="w-full bg-black border-zinc-800 rounded-xl px-4 py-3 font-bold text-sm focus:ring-1 focus:ring-amber-500 text-white"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Notice Banner Settings */}
+      <div className="bg-zinc-900 p-10 rounded-[2.5rem] border border-white/5 space-y-8">
+        <div className="flex items-center gap-4">
+          <div className="size-12 bg-emerald-600 rounded-2xl flex items-center justify-center text-white shadow-[0_0_20px_rgba(5,150,105,0.3)]"><span className="material-symbols-outlined">campaign</span></div>
+          <h3 className="text-xl font-black">Notice Content Hero Banner</h3>
+        </div>
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hero Image URL</label>
+            <input
+              type="url"
+              value={settings.notice_hero_image}
+              onChange={(e) => setSettings({ ...settings, notice_hero_image: e.target.value })}
+              placeholder="https://example.com/notice-banner.jpg"
+              className="w-full bg-black border-zinc-800 rounded-xl px-4 py-3 font-bold text-sm focus:ring-1 focus:ring-emerald-500 text-white"
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hero Title</label>
+              <input
+                type="text"
+                value={settings.notice_hero_title}
+                onChange={(e) => setSettings({ ...settings, notice_hero_title: e.target.value })}
+                placeholder="e.g. Notice & Event"
+                className="w-full bg-black border-zinc-800 rounded-xl px-4 py-3 font-bold text-sm focus:ring-1 focus:ring-emerald-500 text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hero Subtitle</label>
+              <input
+                type="text"
+                value={settings.notice_hero_subtitle}
+                onChange={(e) => setSettings({ ...settings, notice_hero_subtitle: e.target.value })}
+                placeholder="e.g. Latest updates and announcements."
+                className="w-full bg-black border-zinc-800 rounded-xl px-4 py-3 font-bold text-sm focus:ring-1 focus:ring-emerald-500 text-white"
+              />
+            </div>
+          </div>
         </div>
       </div>
 

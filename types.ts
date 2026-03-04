@@ -5,6 +5,7 @@ export interface Venue {
   region: string;
   rating: number;
   reviewsCount: number;
+  reviews_count?: number; // DB compatibility
   description: string;
   image: string;
   banner_image?: string;

@@ -10,6 +10,11 @@ const NoticeCenter: React.FC = () => {
     const [posts, setPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'Notice' | 'Event' | 'FAQ'>('Notice');
+    const [heroSettings, setHeroSettings] = useState({
+        image: 'https://images.unsplash.com/photo-1541746972996-4e0b0f43e03a?q=80&w=2000',
+        title: 'Communication Center',
+        subtitle: 'Stay updated with the latest announcements, special events, and frequently asked questions.'
+    });
 
     useEffect(() => {
         const params = new URLSearchParams(location.search);
@@ -26,8 +31,18 @@ const NoticeCenter: React.FC = () => {
     const fetchPosts = async () => {
         setLoading(true);
         try {
-            const data = await apiService.getPosts(activeTab);
+            const [data, settings] = await Promise.all([
+                apiService.getPosts(activeTab),
+                apiService.getSiteSettings()
+            ]);
             setPosts(data);
+            if (settings) {
+                setHeroSettings({
+                    image: settings.notice_hero_image || 'https://images.unsplash.com/photo-1541746972996-4e0b0f43e03a?q=80&w=2000',
+                    title: settings.notice_hero_title || 'Communication Center',
+                    subtitle: settings.notice_hero_subtitle || 'Stay updated with the latest announcements, special events, and frequently asked questions.'
+                });
+            }
         } catch (error) {
             console.error(error);
         } finally {
@@ -36,12 +51,19 @@ const NoticeCenter: React.FC = () => {
     };
 
     return (
-        <div className="max-w-7xl mx-auto px-4 py-20 animate-fade-in">
-            <div className="text-center space-y-4 mb-20">
-                <span className="inline-block px-4 py-1.5 bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.3em] rounded-full">Support & News</span>
-                <h1 className="text-4xl md:text-5xl font-black tracking-tighter uppercase italic dark:text-white">Communication Center</h1>
-                <p className="text-sm text-gray-500 font-bold uppercase tracking-widest max-w-lg mx-auto leading-relaxed">Stay updated with the latest announcements, special events, and frequently asked questions.</p>
-            </div>
+        <div className="max-w-7xl mx-auto px-0 animate-fade-in">
+            {/* Hero Section */}
+            <section className="relative w-full h-[300px] mb-16 overflow-hidden flex flex-col justify-center rounded-[3rem] shadow-2xl">
+                <img src={heroSettings.image} className="absolute inset-0 w-full h-full object-cover opacity-60" alt="Banner" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent"></div>
+                <div className="relative px-12 md:px-20 space-y-4">
+                    <span className="inline-block px-4 py-1.5 bg-primary/20 text-primary text-[10px] font-black rounded-full uppercase tracking-widest border border-primary/30 backdrop-blur-sm">Support & News</span>
+                    <h1 className="text-3xl md:text-6xl font-black text-white tracking-tighter uppercase italic">{heroSettings.title}</h1>
+                    <p className="text-white/70 max-w-xl text-sm md:text-lg font-medium leading-relaxed">
+                        {heroSettings.subtitle}
+                    </p>
+                </div>
+            </section>
 
             {/* Sub Navigation */}
             <div className="flex flex-wrap justify-center gap-4 mb-16 border-b border-gray-100 dark:border-white/5 pb-8">
