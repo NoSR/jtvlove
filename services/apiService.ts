@@ -170,9 +170,11 @@ export const apiService = {
   },
 
   // CCAs
-  async getCCAs(): Promise<CCA[]> {
+  async getCCAs(venueId?: string): Promise<CCA[]> {
     try {
-      const response = await fetch(`${API_BASE}/ccas`);
+      let url = `${API_BASE}/ccas`;
+      if (venueId) url += `?venueId=${encodeURIComponent(venueId)}`;
+      const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch ccas');
       return await response.json();
     } catch (error) {

@@ -9,7 +9,7 @@ interface Env {
 const VENUE_COLUMNS = [
   'id', 'name', 'region', 'rating', 'reviews_count', 'description', 'image', 'banner_image',
   'phone', 'address', 'introduction', 'tags', 'features', 'sns', 'operating_hours',
-  'showUpTime', 'media', 'menu', 'tables', 'rooms'
+  'showUpTime', 'media', 'menu', 'tables', 'rooms', 'owner_id'
 ];
 
 export const onRequest: PagesFunction<Env> = async (context: any) => {

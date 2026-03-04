@@ -38,6 +38,7 @@ export interface Venue {
   media?: any;
   tables?: any;
   rooms?: any;
+  owner_id?: string;
   introduction?: string;
 }
 

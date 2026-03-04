@@ -18,13 +18,19 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
   // GET: List or Single
   if (request.method === 'GET') {
     try {
+      const venueIdParam = url.searchParams.get('venueId');
+
+      let query = `
+        SELECT c.*, v.name as venueName, v.region as region
+        FROM ccas c 
+        LEFT JOIN venues v ON c.venue_id = v.id
+      `;
+      let queryParams: any[] = [];
+
       if (id) {
-        const result = await env.DB.prepare(`
-          SELECT c.*, v.name as venueName, v.region as region
-          FROM ccas c 
-          LEFT JOIN venues v ON c.venue_id = v.id
-          WHERE c.id = ?
-        `).bind(id).first();
+        query += " WHERE c.id = ?";
+        queryParams.push(id);
+        const result = await env.DB.prepare(query).bind(...queryParams).first();
 
         if (!result) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
 
@@ -56,11 +62,12 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
         });
       }
 
-      const { results } = await env.DB.prepare(`
-        SELECT c.*, v.name as venueName, v.region as region
-        FROM ccas c 
-        LEFT JOIN venues v ON c.venue_id = v.id
-      `).all();
+      if (venueIdParam) {
+        query += " WHERE c.venue_id = ?";
+        queryParams.push(venueIdParam);
+      }
+
+      const { results } = await env.DB.prepare(query).bind(...queryParams).all();
 
       const formattedResults = results.map((c: any) => ({
         ...c,
@@ -159,7 +166,6 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
           f_realNameLast,
           birthday || '',
           address || '',
-          phone || '',
           f_venueId,
           image || '',
           status || 'active',
