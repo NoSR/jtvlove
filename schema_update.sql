@@ -22,3 +22,7 @@ CREATE TABLE IF NOT EXISTS site_docs (
 INSERT OR IGNORE INTO site_docs (type, content) VALUES 
 ('guidelines', '<h1>이용 가이드</h1><p>필리핀 JTV 협회 서비스 이용 가이드입니다.</p>'),
 ('terms', '<h1>이용 약관</h1><p>서비스 이용 약관입니다. 본 서비스를 이용함으로써 귀하는 본 약관에 동의하게 됩니다.</p>');
+
+-- 3. Migration for Venue Owner
+-- Run this if the venues table already exists
+-- ALTER TABLE venues ADD COLUMN owner_id TEXT;

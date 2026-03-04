@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS venues (
   menu TEXT, -- JSON array string
   tables TEXT, -- JSON array string
   rooms TEXT, -- JSON array string
+  owner_id TEXT, -- Added for venue admin linking
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -34,6 +35,7 @@ CREATE TABLE IF NOT EXISTS venues (
 -- ALTER TABLE venues ADD COLUMN menu TEXT;
 -- ALTER TABLE venues ADD COLUMN tables TEXT;
 -- ALTER TABLE venues ADD COLUMN rooms TEXT;
+-- ALTER TABLE venues ADD COLUMN owner_id TEXT;
 
 -- 2. CCAs Table
 CREATE TABLE IF NOT EXISTS ccas (
