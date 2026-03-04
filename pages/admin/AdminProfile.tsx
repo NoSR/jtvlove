@@ -2,6 +2,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { VENUES } from '../../constants';
 import { apiService } from '../../services/apiService';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface MediaItem {
    id: string;
@@ -43,10 +45,12 @@ const TIME_OPTIONS = Array.from({ length: 24 }).map((_, h) => {
 });
 
 const AdminProfile: React.FC = () => {
+   const { user } = useAuth();
+   const navigate = useNavigate();
    const [isLoading, setIsLoading] = useState(true);
    const [activeTab, setActiveTab] = useState('basic');
    const [isSaving, setIsSaving] = useState(false);
-   const venueId = 'v1';
+   const venueId = user?.venueId || '';
 
    // --- State for Basic Settings ---
    const [basicInfo, setBasicInfo] = useState({
@@ -96,10 +100,15 @@ const AdminProfile: React.FC = () => {
    const [showMediaPicker, setShowMediaPicker] = useState<{ active: boolean; type: 'table' | 'room' }>({ active: false, type: 'table' });
 
    useEffect(() => {
+      if (!user || user.role !== 'venue_admin' || !user.venueId) {
+         navigate('/admin/login');
+         return;
+      }
       fetchVenueData();
-   }, []);
+   }, [user, venueId]);
 
    const fetchVenueData = async () => {
+      if (!venueId) return;
       setIsLoading(true);
       const data = await apiService.getVenueById(venueId);
       if (data) {

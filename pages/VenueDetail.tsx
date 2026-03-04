@@ -401,28 +401,13 @@ const VenueDetail: React.FC = () => {
          {/* Sticky Bottom Actions */}
          <div className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-background-dark/80 backdrop-blur-xl border-t border-primary/10 px-6 py-4 z-40">
             <div className="max-w-4xl mx-auto flex gap-4">
-               {venue.phone && (
-                  <a href={`tel:${venue.phone}`} className="hidden md:flex flex-1 h-14 bg-white dark:bg-white/5 border-2 border-primary text-primary rounded-2xl font-black items-center justify-center gap-2 hover:bg-primary/10 active:scale-95 transition-all">
-                     <span className="material-symbols-outlined">call</span>
-                     전화 문의
-                  </a>
-               )}
                <button
                   onClick={() => setShowBookingModal(true)}
-                  className="flex-[2] h-14 bg-primary text-[#1b180d] rounded-2xl font-black flex items-center justify-center gap-2 shadow-2xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all"
+                  className="w-full h-14 bg-primary text-[#1b180d] rounded-2xl font-black flex items-center justify-center gap-2 shadow-2xl shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all"
                >
                   <span className="material-symbols-outlined">calendar_month</span>
                   실시간 예약하기
                </button>
-               {venue.sns?.telegram && (
-                  <button
-                     onClick={() => window.open(venue.sns?.telegram || '#', '_blank')}
-                     className="flex-1 h-14 bg-blue-500 text-white rounded-2xl font-black hidden md:flex items-center justify-center gap-2 shadow-2xl shadow-blue-500/30 hover:scale-[1.02] active:scale-95 transition-all"
-                  >
-                     <span className="material-symbols-outlined">send</span>
-                     텔레그램
-                  </button>
-               )}
             </div>
          </div>
 

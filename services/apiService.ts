@@ -879,7 +879,20 @@ export const apiService = {
     }
   },
 
-  // Users
+  async registerVenueAdmin(data: any): Promise<{ success: boolean; userId?: string; venueId?: string; error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE}/venue-admin/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return await response.json();
+    } catch (error: any) {
+      console.error('registerVenueAdmin error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
   async register(data: any): Promise<{ success: boolean; id?: string; error?: string }> {
     try {
       const response = await fetch(`${API_BASE}/users`, {
@@ -893,7 +906,6 @@ export const apiService = {
       return { success: false, error: error.message };
     }
   },
-
 
   async getUser(id: string): Promise<any> {
     try {
@@ -933,7 +945,7 @@ export const apiService = {
     }
   },
 
-  async login(data: any): Promise<{ success: boolean; user?: any; error?: string }> {
+  async login(data: any): Promise<{ success: boolean; user?: any; venueId?: string; error?: string }> {
     try {
       const response = await fetch(`${API_BASE}/login`, {
         method: 'POST',
@@ -1046,6 +1058,7 @@ export const apiService = {
   },
 
   // Admin User Management
+  // Admin User Management
   async getAdminUsers(): Promise<any[]> {
     const response = await fetch(`${API_BASE}/super/users`);
     if (!response.ok) {
@@ -1144,4 +1157,5 @@ export const apiService = {
     return response.ok;
   }
 };
+
 

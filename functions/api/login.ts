@@ -27,7 +27,13 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
             return new Response(JSON.stringify({ error: 'Invalid email or password' }), { status: 401 });
         }
 
-        return new Response(JSON.stringify({ success: true, user }), {
+        let venueId = null;
+        if (user.role === 'venue_admin') {
+            const venue = await env.DB.prepare('SELECT id FROM venues WHERE owner_id = ?').bind(user.id).first();
+            if (venue) venueId = venue.id;
+        }
+
+        return new Response(JSON.stringify({ success: true, user, venueId }), {
             headers: { 'Content-Type': 'application/json' },
         });
     } catch (error: any) {

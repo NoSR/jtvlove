@@ -224,7 +224,7 @@ export interface User {
   badgeId?: string;
   frameId?: string;
   points: number;
-  role: 'user' | 'super_admin';
+  role: 'user' | 'super_admin' | 'venue_admin';
   createdAt: string;
 }
 

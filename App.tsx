@@ -40,11 +40,30 @@ import SuperUsers from './pages/super/SuperUsers';
 import SuperHeroManager from './pages/super/SuperHeroManager';
 import SuperNotice from './pages/super/SuperNotice';
 
+// Venue Admin Auth
+import VenueAdminLogin from './pages/admin/VenueAdminLogin';
+import VenueAdminRegister from './pages/admin/VenueAdminRegister';
+import VenueSelectorModal from './pages/admin/VenueSelectorModal';
+
 const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const [boards, setBoards] = useState<any[]>([]);
+  const [showVenueSelector, setShowVenueSelector] = useState(false);
+
+  const handleVenueSelect = (venueId: string) => {
+    updateUser({ venueId });
+    setShowVenueSelector(false);
+    navigate('/admin');
+  };
+
+  const handleOwnerClick = (e: React.MouseEvent) => {
+    if (user?.role === 'super_admin') {
+      e.preventDefault();
+      setShowVenueSelector(true);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -144,7 +163,7 @@ const Navigation = () => {
 
             <Link to="/mypage" className={`text-sm font-bold transition-colors ${isActive('/mypage') ? 'text-primary' : 'hover:text-primary'}`}>마이페이지</Link>
             <div className="flex gap-2">
-              <Link to="/admin" className="text-[10px] font-black bg-zinc-100 dark:bg-white/5 px-3 py-1 rounded-full uppercase">업주용</Link>
+              <Link to="/admin/login" onClick={handleOwnerClick} className="text-[10px] font-black bg-zinc-100 dark:bg-white/5 px-3 py-1 rounded-full uppercase">업주용</Link>
               <Link to="/cca-portal" className="text-[10px] font-black bg-primary/10 text-primary px-3 py-1 rounded-full uppercase tracking-tighter">CCA 전용</Link>
               <Link to="/super-admin" className="text-[10px] font-black bg-red-500/10 text-red-600 px-3 py-1 rounded-full uppercase">관리자</Link>
             </div>
@@ -207,6 +226,12 @@ const Navigation = () => {
           <span className="text-[10px] font-bold">마이페이지</span>
         </Link>
       </nav>
+
+      <VenueSelectorModal
+        isOpen={showVenueSelector}
+        onClose={() => setShowVenueSelector(false)}
+        onSelect={handleVenueSelect}
+      />
     </>
   );
 };
@@ -240,6 +265,10 @@ const App: React.FC = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/notice" element={<NoticeCenter />} />
           <Route path="/policy" element={<Policy />} />
+
+          {/* Venue Admin Auth */}
+          <Route path="/admin/login" element={<VenueAdminLogin />} />
+          <Route path="/admin/register" element={<VenueAdminRegister />} />
 
           {/* Admin Routes */}
           <Route path="/admin/*" element={<AdminLayoutRoutes />} />

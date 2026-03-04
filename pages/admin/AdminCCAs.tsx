@@ -3,8 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { apiService } from '../../services/apiService';
 import { CCA, PointCategory, PointLog } from '../../types';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const AdminCCAs: React.FC = () => {
+   const { user } = useAuth();
+   const navigate = useNavigate();
    const [activeTab, setActiveTab] = useState('current');
    const [ccas, setCcas] = useState<CCA[]>([]);
    const [loading, setLoading] = useState(true);
@@ -41,19 +45,25 @@ const AdminCCAs: React.FC = () => {
    });
 
    useEffect(() => {
+      if (!user || user.role !== 'venue_admin' || !user.venueId) {
+         navigate('/admin/login');
+         return;
+      }
       fetchCCAs();
       fetchCategories();
-   }, []);
+   }, [user]);
 
    const fetchCCAs = async () => {
+      if (!user?.venueId) return;
       setLoading(true);
-      const data = await apiService.getCCAs();
+      const data = await apiService.getCCAs(user.venueId);
       setCcas(data);
       setLoading(false);
    };
 
    const fetchCategories = async () => {
-      const data = await apiService.getCCAPointCategories('v1');
+      if (!user?.venueId) return;
+      const data = await apiService.getCCAPointCategories(user.venueId);
       setPointCategories(data);
    };
 
@@ -92,7 +102,7 @@ const AdminCCAs: React.FC = () => {
          childrenStatus,
          specialNotes,
          status: confirmImmediately ? 'active' : 'applicant',
-         venueId: 'v1'
+         venueId: user?.venueId || ''
       });
 
       if (success) {
@@ -373,8 +383,8 @@ const AdminCCAs: React.FC = () => {
                                        const name = prompt('Category Name?');
                                        const amount = prompt('Amount (Pesos)?');
                                        const type = confirm('Is this a Bonus Point? (Cancel for Penalty)') ? 'point' : 'penalty';
-                                       if (name && amount) {
-                                          apiService.saveCCAPointCategory({ venueId: 'v1', name, amount: parseFloat(amount), type }).then(() => fetchCategories());
+                                       if (name && amount && user?.venueId) {
+                                          apiService.saveCCAPointCategory({ venueId: user.venueId, name, amount: parseFloat(amount), type }).then(() => fetchCategories());
                                        }
                                     }} className="px-4 py-2 bg-primary/10 text-primary rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-primary hover:text-[#1b180d] transition-all">+ Add Category</button>
                                  </div>

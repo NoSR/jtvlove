@@ -2,10 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiService } from '../../services/apiService';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Reservation, CCA, Venue, CCAStatus } from '../../types';
 import { RESERVATIONS, CCAS } from '../../constants';
 
 const AdminReservations: React.FC = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [viewDate, setViewDate] = useState(new Date());
   const [venue, setVenue] = useState<Venue | null>(null);
@@ -33,13 +37,18 @@ const AdminReservations: React.FC = () => {
   });
 
   useEffect(() => {
+    if (!user || user.role !== 'venue_admin' || !user.venueId) {
+      navigate('/admin/login');
+      return;
+    }
     loadData();
-  }, []);
+  }, [user]);
 
   const loadData = async () => {
+    if (!user?.venueId) return;
     setLoading(true);
     try {
-      const venueId = 'v1'; // Should be dynamic in future
+      const venueId = user.venueId;
       const [vData, cData] = await Promise.all([
         apiService.getVenueById(venueId),
         apiService.getCCAs(venueId)
