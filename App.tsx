@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { apiService } from './services/apiService';
 import Home from './pages/Home';
@@ -54,6 +54,7 @@ const Navigation = () => {
   const navigate = useNavigate();
   const { user, logout, updateUser } = useAuth();
   const [boards, setBoards] = useState<any[]>([]);
+  const [settings, setSettings] = useState<any>(null);
   const [showVenueSelector, setShowVenueSelector] = useState(false);
   const [showCCASelector, setShowCCASelector] = useState(false);
 
@@ -103,6 +104,12 @@ const Navigation = () => {
       }
     };
     fetchBoards();
+
+    const fetchSettings = async () => {
+      const data = await apiService.getSiteSettings();
+      setSettings(data);
+    };
+    fetchSettings();
   }, []);
 
   const isSpecial = location.pathname.startsWith('/admin') ||
@@ -117,11 +124,19 @@ const Navigation = () => {
       <header className="sticky top-0 z-50 bg-white/95 dark:bg-background-dark/95 backdrop-blur-md border-b border-primary/10 px-4 h-16 hidden md:flex items-center">
         <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded flex items-center justify-center text-white">
-              <span className="material-symbols-outlined text-xl fill-1">stars</span>
-            </div>
+            {settings?.logo_url ? (
+              <img src={settings.logo_url} alt="Logo" className="h-8 object-contain" />
+            ) : (
+              <div className="w-8 h-8 bg-primary rounded flex items-center justify-center text-white shrink-0">
+                <span className="material-symbols-outlined text-xl fill-1">stars</span>
+              </div>
+            )}
             <h1 className="font-extrabold text-sm tracking-tight leading-none uppercase">
-              필리핀<br /><span className="text-primary">JTV 협회</span>
+              {settings?.site_name ? (
+                <span className="whitespace-pre-line">{settings.site_name}</span>
+              ) : (
+                <>필리핀<br /><span className="text-primary">JTV 협회</span></>
+              )}
             </h1>
           </Link>
           <nav className="flex items-center gap-8">
@@ -204,10 +219,16 @@ const Navigation = () => {
       {/* Mobile Top Header */}
       <header className="md:hidden sticky top-0 z-50 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-b border-primary/10 px-4 h-14 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-primary rounded flex items-center justify-center text-white">
-            <span className="material-symbols-outlined text-sm">stars</span>
-          </div>
-          <span className="font-black text-[10px] uppercase tracking-tighter">JTV LOVE</span>
+          {settings?.logo_url ? (
+            <img src={settings.logo_url} alt="Logo" className="h-6 object-contain" />
+          ) : (
+            <div className="w-6 h-6 bg-primary rounded flex items-center justify-center text-white shrink-0">
+              <span className="material-symbols-outlined text-sm">stars</span>
+            </div>
+          )}
+          <span className="font-black text-[10px] uppercase tracking-tighter">
+            {settings?.site_name || 'JTV LOVE'}
+          </span>
         </Link>
         {user ? (
           <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-1.5 bg-red-500/10 text-red-500 rounded-full text-[9px] font-black uppercase tracking-widest shadow-lg">
