@@ -21,6 +21,61 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
             return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
         }
 
+        // 1. Ensure tables exist before operations (D1 initialization safety)
+        try {
+            await env.DB.prepare(`
+                CREATE TABLE IF NOT EXISTS users (
+                    id TEXT PRIMARY KEY,
+                    email TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL,
+                    nickname TEXT NOT NULL,
+                    real_name TEXT NOT NULL,
+                    phone TEXT,
+                    level INTEGER DEFAULT 1,
+                    total_xp INTEGER DEFAULT 0,
+                    streak INTEGER DEFAULT 0,
+                    last_login TEXT,
+                    daily_xp INTEGER DEFAULT 0,
+                    quests TEXT,
+                    badge_id TEXT,
+                    frame_id TEXT,
+                    points INTEGER DEFAULT 0,
+                    role TEXT DEFAULT 'user',
+                    profile_image TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                );
+            `).run();
+
+            await env.DB.prepare(`
+                CREATE TABLE IF NOT EXISTS venues (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    region TEXT NOT NULL,
+                    rating REAL DEFAULT 0,
+                    reviews_count INTEGER DEFAULT 0,
+                    description TEXT,
+                    image TEXT,
+                    banner_image TEXT,
+                    phone TEXT,
+                    address TEXT,
+                    introduction TEXT,
+                    tags TEXT,
+                    features TEXT,
+                    sns TEXT,
+                    operating_hours TEXT,
+                    showUpTime TEXT,
+                    media TEXT,
+                    menu TEXT,
+                    tables TEXT,
+                    rooms TEXT,
+                    owner_id TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                );
+            `).run();
+        } catch (e: any) {
+            console.error("D1 table creation error:", e);
+        }
+
         // Generate IDs
         const userId = `ua_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
         const venueId = `v_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
