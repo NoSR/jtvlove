@@ -10,6 +10,51 @@ export const onRequest: PagesFunction<{ DB: D1Database }> = async (context: any)
   const { env, request } = context;
   const url = new URL(request.url);
 
+  // 0. Ensure tables exist (Defensive)
+  try {
+    await env.DB.prepare(`
+      CREATE TABLE IF NOT EXISTS posts (
+        id TEXT PRIMARY KEY,
+        board TEXT NOT NULL,
+        category TEXT,
+        title TEXT NOT NULL,
+        author TEXT NOT NULL,
+        content TEXT NOT NULL,
+        image TEXT,
+        views INTEGER DEFAULT 0,
+        likes INTEGER DEFAULT 0,
+        is_secret INTEGER DEFAULT 0,
+        password TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `).run();
+
+    await env.DB.prepare(`
+      CREATE TABLE IF NOT EXISTS post_comments (
+        id TEXT PRIMARY KEY,
+        post_id TEXT NOT NULL,
+        author TEXT NOT NULL,
+        content TEXT NOT NULL,
+        likes INTEGER DEFAULT 0,
+        dislikes INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+      )
+    `).run();
+
+    await env.DB.prepare(`
+      CREATE TABLE IF NOT EXISTS board_configs (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        categories TEXT,
+        display_order INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `).run();
+  } catch (e) {
+    console.error("Table initialization error in posts.ts:", e);
+  }
+
   // GET: 리스트 조회 또는 상세 조회
   if (request.method === "GET") {
     const board = url.searchParams.get("board");
@@ -43,8 +88,7 @@ export const onRequest: PagesFunction<{ DB: D1Database }> = async (context: any)
 
       const { results } = await env.DB.prepare(query).bind(...params).all();
 
-      // 비밀글 처리: 비밀번호가 있으면 내용을 마스킹하거나 클라이언트에서 처리하도록 필드 유지
-      // 실제 보안이 중요하다면 여기서 password 검증 로직이 들어가야 함
+      // 비밀글 처리
       const processedResults = results.map((post: any) => {
         if (post.is_secret && !id) {
           return { ...post, content: "비밀글입니다.", title: "비밀글입니다." };
@@ -52,7 +96,7 @@ export const onRequest: PagesFunction<{ DB: D1Database }> = async (context: any)
         return post;
       });
 
-      return new Response(JSON.stringify(id ? processedResults[0] : processedResults), {
+      return new Response(id ? JSON.stringify(processedResults[0]) : JSON.stringify(processedResults), {
         headers: { "Content-Type": "application/json" },
       });
     } catch (error: any) {
@@ -116,21 +160,12 @@ export const onRequest: PagesFunction<{ DB: D1Database }> = async (context: any)
       const body = await request.json();
       if (!body) throw new Error("Request body is empty");
 
-      let id;
-      try {
-        id = crypto.randomUUID();
-      } catch (e) {
-        id = `p_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-      }
+      let id = `p_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
       const { board, category, title, author, content, image, is_secret, password } = body;
 
       if (!board || !title || !author || !content) {
         throw new Error("Missing required fields: board, title, author, or content");
-      }
-
-      if (!env.DB) {
-        throw new Error("D1 Database binding 'DB' is not configured.");
       }
 
       await env.DB.prepare(

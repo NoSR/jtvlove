@@ -1,7 +1,24 @@
-
 export const onRequest = async (context: any) => {
     const { env, request } = context;
     const url = new URL(request.url);
+
+    // 0. Ensure tables exist (Defensive)
+    try {
+        await env.DB.prepare(`
+            CREATE TABLE IF NOT EXISTS post_comments (
+                id TEXT PRIMARY KEY,
+                post_id TEXT NOT NULL,
+                author TEXT NOT NULL,
+                content TEXT NOT NULL,
+                likes INTEGER DEFAULT 0,
+                dislikes INTEGER DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+            )
+        `).run();
+    } catch (e) {
+        console.error("Table initialization error in comments.ts:", e);
+    }
 
     // GET: 특정 게시글의 댓글 조회
     if (request.method === "GET") {
