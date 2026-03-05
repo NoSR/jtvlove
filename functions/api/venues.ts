@@ -145,27 +145,23 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
 
       // 0. Ensure tables exist before deletion to avoid "no such table" errors
       try {
-        await env.DB.batch([
-          env.DB.prepare("CREATE TABLE IF NOT EXISTS gallery (id TEXT PRIMARY KEY, cca_id TEXT NOT NULL, type TEXT NOT NULL, url TEXT NOT NULL, caption TEXT, likes INTEGER DEFAULT 0, shares INTEGER DEFAULT 0, comments_count INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)"),
-          env.DB.prepare("CREATE TABLE IF NOT EXISTS cca_holidays (id TEXT PRIMARY KEY, cca_id TEXT NOT NULL, holiday_date TEXT NOT NULL, UNIQUE(cca_id, holiday_date))"),
-          env.DB.prepare("CREATE TABLE IF NOT EXISTS cca_sold_out (id TEXT PRIMARY KEY, cca_id TEXT NOT NULL, sold_out_date TEXT NOT NULL, UNIQUE(cca_id, sold_out_date))"),
-          env.DB.prepare("CREATE TABLE IF NOT EXISTS customer_messages (id TEXT PRIMARY KEY, cca_id TEXT NOT NULL, customer_name TEXT NOT NULL, message TEXT NOT NULL, is_read INTEGER DEFAULT 0, replied INTEGER DEFAULT 0, reply_text TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, replied_at DATETIME)"),
-          env.DB.prepare("CREATE TABLE IF NOT EXISTS cca_point_logs (id TEXT PRIMARY KEY, cca_id TEXT NOT NULL, category_id TEXT, name TEXT NOT NULL, amount REAL NOT NULL, quantity INTEGER DEFAULT 1, total REAL NOT NULL, description TEXT, log_date TEXT NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)"),
-          env.DB.prepare("CREATE TABLE IF NOT EXISTS admin_messages (id TEXT PRIMARY KEY, venue_id TEXT NOT NULL, cca_id TEXT NOT NULL, sender_name TEXT NOT NULL, title TEXT NOT NULL, message TEXT NOT NULL, is_read INTEGER DEFAULT 0, priority TEXT DEFAULT 'normal', created_at DATETIME DEFAULT CURRENT_TIMESTAMP)"),
-          env.DB.prepare("CREATE TABLE IF NOT EXISTS cca_attendance (id TEXT PRIMARY KEY, cca_id TEXT NOT NULL, venue_id TEXT NOT NULL, check_in_at DATETIME, check_out_at DATETIME, attendance_date TEXT NOT NULL, status TEXT DEFAULT 'checked_in', UNIQUE(cca_id, attendance_date))"),
-          env.DB.prepare("CREATE TABLE IF NOT EXISTS cca_employment_history (id TEXT PRIMARY KEY, cca_id TEXT NOT NULL, venue_id TEXT NOT NULL, join_date TEXT NOT NULL, leave_date TEXT, status TEXT)"),
-          env.DB.prepare("CREATE TABLE IF NOT EXISTS hero_sections (id INTEGER PRIMARY KEY AUTOINCREMENT, cca_id TEXT, badge1 TEXT, badge2 TEXT, title TEXT, content TEXT, button_text TEXT, button_link TEXT, image_url TEXT, display_order INTEGER)"),
-          env.DB.prepare("CREATE TABLE IF NOT EXISTS venue_notices (id TEXT PRIMARY KEY, venue_id TEXT NOT NULL, title TEXT NOT NULL, content TEXT NOT NULL, is_pinned INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)"),
-          env.DB.prepare("CREATE TABLE IF NOT EXISTS cca_point_categories (id TEXT PRIMARY KEY, venue_id TEXT NOT NULL, name TEXT NOT NULL, amount REAL NOT NULL, type TEXT DEFAULT 'point')")
-        ]);
+        await env.DB.prepare("CREATE TABLE IF NOT EXISTS gallery (id TEXT PRIMARY KEY, cca_id TEXT NOT NULL, type TEXT NOT NULL, url TEXT NOT NULL, caption TEXT, likes INTEGER DEFAULT 0, shares INTEGER DEFAULT 0, comments_count INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)").run();
+        await env.DB.prepare("CREATE TABLE IF NOT EXISTS cca_holidays (id TEXT PRIMARY KEY, cca_id TEXT NOT NULL, holiday_date TEXT NOT NULL, UNIQUE(cca_id, holiday_date))").run();
+        await env.DB.prepare("CREATE TABLE IF NOT EXISTS cca_sold_out (id TEXT PRIMARY KEY, cca_id TEXT NOT NULL, holiday_date TEXT NOT NULL, UNIQUE(cca_id, holiday_date))").run();
+        await env.DB.prepare("CREATE TABLE IF NOT EXISTS customer_messages (id TEXT PRIMARY KEY, cca_id TEXT NOT NULL, customer_name TEXT NOT NULL, message TEXT NOT NULL, is_read INTEGER DEFAULT 0, replied INTEGER DEFAULT 0, reply_text TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, replied_at DATETIME)").run();
+        await env.DB.prepare("CREATE TABLE IF NOT EXISTS cca_point_logs (id TEXT PRIMARY KEY, cca_id TEXT NOT NULL, category_id TEXT, name TEXT NOT NULL, amount REAL NOT NULL, quantity INTEGER DEFAULT 1, total REAL NOT NULL, description TEXT, log_date TEXT NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)").run();
+        await env.DB.prepare("CREATE TABLE IF NOT EXISTS admin_messages (id TEXT PRIMARY KEY, venue_id TEXT NOT NULL, cca_id TEXT NOT NULL, sender_name TEXT NOT NULL, title TEXT NOT NULL, message TEXT NOT NULL, is_read INTEGER DEFAULT 0, priority TEXT DEFAULT 'normal', created_at DATETIME DEFAULT CURRENT_TIMESTAMP)").run();
+        await env.DB.prepare("CREATE TABLE IF NOT EXISTS cca_attendance (id TEXT PRIMARY KEY, cca_id TEXT NOT NULL, venue_id TEXT NOT NULL, check_in_at DATETIME, check_out_at DATETIME, attendance_date TEXT NOT NULL, status TEXT DEFAULT 'checked_in', UNIQUE(cca_id, attendance_date))").run();
+        await env.DB.prepare("CREATE TABLE IF NOT EXISTS cca_employment_history (id TEXT PRIMARY KEY, cca_id TEXT NOT NULL, venue_id TEXT NOT NULL, join_date TEXT NOT NULL, leave_date TEXT, status TEXT)").run();
+        await env.DB.prepare("CREATE TABLE IF NOT EXISTS hero_sections (id INTEGER PRIMARY KEY AUTOINCREMENT, cca_id TEXT, badge1 TEXT, badge2 TEXT, title TEXT, content TEXT, button_text TEXT, button_link TEXT, image_url TEXT, display_order INTEGER)").run();
+        await env.DB.prepare("CREATE TABLE IF NOT EXISTS venue_notices (id TEXT PRIMARY KEY, venue_id TEXT NOT NULL, title TEXT NOT NULL, content TEXT NOT NULL, is_pinned INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)").run();
+        await env.DB.prepare("CREATE TABLE IF NOT EXISTS cca_point_categories (id TEXT PRIMARY KEY, venue_id TEXT NOT NULL, name TEXT NOT NULL, amount REAL NOT NULL, type TEXT DEFAULT 'point')").run();
       } catch (e) {
         console.error("Initialization error during delete:", e);
       }
 
       // Manual cascade deletion to avoid foreign key constraints
-      // We must delete records from all tables that reference ccas belonging to this venue
       await env.DB.batch([
-        // 1. Delete records referencing CCAs of this venue (across all venues)
         env.DB.prepare("DELETE FROM gallery WHERE cca_id IN (SELECT id FROM ccas WHERE venue_id = ?)").bind(idParam),
         env.DB.prepare("DELETE FROM cca_holidays WHERE cca_id IN (SELECT id FROM ccas WHERE venue_id = ?)").bind(idParam),
         env.DB.prepare("DELETE FROM cca_sold_out WHERE cca_id IN (SELECT id FROM ccas WHERE venue_id = ?)").bind(idParam),
@@ -175,16 +171,10 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
         env.DB.prepare("DELETE FROM cca_attendance WHERE cca_id IN (SELECT id FROM ccas WHERE venue_id = ?)").bind(idParam),
         env.DB.prepare("DELETE FROM cca_employment_history WHERE cca_id IN (SELECT id FROM ccas WHERE venue_id = ?)").bind(idParam),
         env.DB.prepare("DELETE FROM hero_sections WHERE cca_id IN (SELECT id FROM ccas WHERE venue_id = ?)").bind(idParam),
-
-        // 2. Delete venue-specific records
         env.DB.prepare("DELETE FROM venue_notices WHERE venue_id = ?").bind(idParam),
         env.DB.prepare("DELETE FROM reservations WHERE venue_id = ?").bind(idParam),
         env.DB.prepare("DELETE FROM cca_point_categories WHERE venue_id = ?").bind(idParam),
-
-        // 3. Delete the CCAs themselves
         env.DB.prepare("DELETE FROM ccas WHERE venue_id = ?").bind(idParam),
-
-        // 4. Finally delete the venue
         env.DB.prepare("DELETE FROM venues WHERE id = ?").bind(idParam)
       ]);
 
