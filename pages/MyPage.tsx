@@ -1,4 +1,4 @@
-// Latest Fixes: 2026-03-06 22:00 (Inquiry Response Display Fix)
+// Latest Fixes: 2026-03-06 22:05 (Inquiry Response Display Fix - redeploy)
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/apiService';
