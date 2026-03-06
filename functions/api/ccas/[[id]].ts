@@ -21,7 +21,7 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
       const venueIdParam = url.searchParams.get('venueId');
 
       let query = `
-        SELECT c.*, v.name as venueName, v.region as region
+        SELECT c.*, v.name as venueName, v.name as venue_name, v.region as region
         FROM ccas c 
         LEFT JOIN venues v ON c.venue_id = v.id
       `;

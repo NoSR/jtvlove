@@ -117,16 +117,29 @@ export const onRequest: any = async (context: any) => {
                 return new Response(JSON.stringify(results || []), { headers: { "Content-Type": "application/json" } });
             }
 
-            if (action === "listCCAs") {
+            if (action === 'listCCAs') {
                 const today = new Date().toISOString().split('T')[0];
                 const query = `
-          SELECT c.*, v.name as venue_name, v.region as region,
+          SELECT c.*, v.name as venue_name, v.name as venueName, v.region as region,
           (SELECT COUNT(*) FROM reservations r WHERE r.cca_id = c.id AND r.reservation_date = ?) as today_reservations
-          FROM ccas c
+          FROM ccas c 
           LEFT JOIN venues v ON c.venue_id = v.id
+          ORDER BY c.created_at DESC
         `;
                 const { results } = await env.DB.prepare(query).bind(today).all();
-                return new Response(JSON.stringify(results || []), { headers: { "Content-Type": "application/json" } });
+
+                const formatted = results.map((c: any) => ({
+                    ...c,
+                    venueName: c.venueName || c.venue_name,
+                    isNew: c.is_new === 1,
+                    specialties: c.specialties ? JSON.parse(c.specialties) : [],
+                    languages: c.languages ? JSON.parse(c.languages) : [],
+                    experience_history: c.experience_history ? JSON.parse(c.experience_history) : []
+                }));
+
+                return new Response(JSON.stringify(formatted || []), {
+                    headers: { "Content-Type": "application/json" },
+                });
             }
 
             if (action === "venueHistory" && id) {
