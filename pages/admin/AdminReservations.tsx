@@ -3,15 +3,20 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiService } from '../../services/apiService';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Reservation, CCA, Venue, CCAStatus } from '../../types';
 import { RESERVATIONS, CCAS } from '../../constants';
 
 const AdminReservations: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [viewDate, setViewDate] = useState(new Date());
+  const [searchParams] = useSearchParams();
+  const initialDate = searchParams.get('date') || new Date().toISOString().split('T')[0];
+  const [selectedDate, setSelectedDate] = useState(initialDate);
+  const [viewDate, setViewDate] = useState(() => {
+    const d = new Date(initialDate);
+    return isNaN(d.getTime()) ? new Date() : d;
+  });
   const [venue, setVenue] = useState<Venue | null>(null);
   const [allCCAs, setAllCCAs] = useState<CCA[]>(CCAS); // Default to mock
   const [reservations, setReservations] = useState<Reservation[]>(RESERVATIONS); // Default to mock

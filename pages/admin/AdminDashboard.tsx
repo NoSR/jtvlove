@@ -86,7 +86,7 @@ const AdminDashboard: React.FC = () => {
                <div className="space-y-4">
                   {reservations.length > 0 ? (
                      reservations.slice(0, 5).map(res => (
-                        <div key={res.id} className="flex items-center justify-between p-6 bg-background-light dark:bg-white/5 rounded-2xl border border-primary/5 group hover:bg-white dark:hover:bg-zinc-800 transition-all">
+                        <div key={res.id} onClick={() => navigate(`/admin/reservations?date=${res.date}`)} className="flex items-center justify-between p-6 bg-background-light dark:bg-white/5 rounded-2xl border border-primary/5 group hover:bg-white dark:hover:bg-zinc-800 transition-all cursor-pointer">
                            <div className="flex items-center gap-4">
                               <div className="size-10 bg-primary/20 text-primary rounded-full flex items-center justify-center">
                                  <span className="material-symbols-outlined">schedule</span>
