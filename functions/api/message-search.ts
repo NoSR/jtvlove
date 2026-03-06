@@ -22,7 +22,30 @@ export const onRequest: any = async (context: any) => {
     const results: any[] = [];
 
     try {
-        // Search users
+        // Search CCAs first
+        if (type === "all" || type === "cca") {
+            try {
+                const { results: ccas } = await env.DB.prepare(
+                    `SELECT c.id, c.name, c.nickname, v.name as venue_name, 'cca' as type 
+                     FROM ccas c 
+                     LEFT JOIN venues v ON c.venue_id = v.id 
+                     WHERE c.nickname LIKE ? OR c.name LIKE ? 
+                     LIMIT 10`
+                ).bind(searchTerm, searchTerm).all();
+                if (ccas) {
+                    results.push(...ccas.map((c: any) => ({
+                        id: c.id,
+                        name: c.nickname || c.name,
+                        type: 'cca',
+                        label: `💃 ${c.nickname || c.name} (${c.venue_name || '소속 없음'})`
+                    })));
+                }
+            } catch (e) {
+                console.error("CCA Search Error:", e);
+            }
+        }
+
+        // Then Search users
         if (type === "all" || type === "user") {
             try {
                 const { results: users } = await env.DB.prepare(
@@ -34,23 +57,6 @@ export const onRequest: any = async (context: any) => {
                         name: u.nickname || u.email,
                         type: 'user',
                         label: `👤 ${u.nickname || u.email}`
-                    })));
-                }
-            } catch (e) { /* table may not exist */ }
-        }
-
-        // Search CCAs
-        if (type === "all" || type === "cca") {
-            try {
-                const { results: ccas } = await env.DB.prepare(
-                    `SELECT id, name, nickname, venue_name, 'cca' as type FROM ccas WHERE nickname LIKE ? OR name LIKE ? LIMIT 10`
-                ).bind(searchTerm, searchTerm).all();
-                if (ccas) {
-                    results.push(...ccas.map((c: any) => ({
-                        id: c.id,
-                        name: c.nickname || c.name,
-                        type: 'cca',
-                        label: `💃 ${c.nickname || c.name} (${c.venue_name || ''})`
                     })));
                 }
             } catch (e) { /* table may not exist */ }
