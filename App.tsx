@@ -358,21 +358,31 @@ const SuperAdminProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ chi
   return <>{children}</>;
 };
 
+import AdminMessages from './pages/admin/AdminMessages';
+import AdminInquiry from './pages/admin/AdminInquiry';
+
 const AdminLayoutRoutes = () => (
   <Routes>
     <Route path="/" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+    <Route path="/messages" element={<AdminLayout><AdminMessages /></AdminLayout>} />
     <Route path="/profile" element={<AdminLayout><AdminProfile /></AdminLayout>} />
     <Route path="/reservations" element={<AdminLayout><AdminReservations /></AdminLayout>} />
     <Route path="/ccas" element={<AdminLayout><AdminCCAs /></AdminLayout>} />
     <Route path="/notices" element={<AdminLayout><AdminNotices /></AdminLayout>} />
+    <Route path="/inquiry" element={<AdminLayout><AdminInquiry /></AdminLayout>} />
   </Routes>
 );
+
+import CCAMessages from './pages/cca/CCAMessages';
+import CCAInquiry from './pages/cca/CCAInquiry';
 
 const CCAPortalRoutes = () => (
   <Routes>
     <Route path="/" element={<CCAPortalHome />} />
+    <Route path="/messages" element={<CCAMessages />} />
     <Route path="/schedule" element={<CCAMySchedule />} />
     <Route path="/gallery" element={<CCAGalleryManager />} />
+    <Route path="/inquiry" element={<CCAInquiry />} />
     <Route path="/settings" element={<CCAProfileSettings />} />
   </Routes>
 );
@@ -394,10 +404,12 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const navItems = [
     { path: '/admin', name: '대시보드', icon: 'dashboard' },
+    { path: '/admin/messages', name: '메시지', icon: 'mail' },
     { path: '/admin/profile', name: '업소 설정', icon: 'storefront' },
     { path: '/admin/reservations', name: '예약 관리', icon: 'calendar_month' },
     { path: '/admin/ccas', name: '스태프 관리', icon: 'groups' },
     { path: '/admin/notices', name: '공지사항', icon: 'campaign' },
+    { path: '/admin/inquiry', name: '시스템 문의', icon: 'support_agent' },
   ];
 
   return (

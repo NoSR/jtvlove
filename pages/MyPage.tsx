@@ -9,7 +9,23 @@ const MyPage: React.FC = () => {
 
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'info' | 'service' | 'payment'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'service' | 'payment' | 'messages'>('info');
+
+  // Messages States
+  const [msgTab, setMsgTab] = useState<'inbox' | 'sent'>('inbox');
+  const [messages, setMessages] = useState<any[]>([]);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [selectedMsg, setSelectedMsg] = useState<any | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [replying, setReplying] = useState(false);
+  const [showComposeMsg, setShowComposeMsg] = useState(false);
+  const [composeRecType, setComposeRecType] = useState('user');
+  const [composeSearchTerm, setComposeSearchTerm] = useState('');
+  const [composeSearchResults, setComposeSearchResults] = useState<any[]>([]);
+  const [composeSelectedUser, setComposeSelectedUser] = useState<any | null>(null);
+  const [composeSubject, setComposeSubject] = useState('');
+  const [composeContent, setComposeContent] = useState('');
+  const [composeSending, setComposeSending] = useState(false);
 
   // Edit States
   const [editField, setEditField] = useState<'email' | 'phone' | 'password' | null>(null);
@@ -82,6 +98,96 @@ const MyPage: React.FC = () => {
 
     fetchUserData();
   }, [authUser, navigate]);
+
+  // Fetch messages when tab or type changes
+  useEffect(() => {
+    if (activeTab === 'messages' && user) {
+      fetchMessages();
+    }
+  }, [activeTab, msgTab, user]);
+
+  const fetchMessages = async () => {
+    if (!user) return;
+    setIsLoadingMessages(true);
+    try {
+      if (msgTab === 'inbox') {
+        const data = await apiService.getMessages({ receiverId: user.id, receiverType: 'user' });
+        setMessages(data);
+      } else {
+        const data = await apiService.getMessages({ senderId: user.id, senderType: 'user' });
+        setMessages(data);
+      }
+    } catch (e) { console.error(e); }
+    finally { setIsLoadingMessages(false); }
+  };
+
+  const handleReplyMessage = async (msgId: string) => {
+    if (!replyText.trim()) return;
+    setReplying(true);
+    await apiService.replyMessage(msgId, replyText);
+    setReplyText('');
+    setReplying(false);
+    setSelectedMsg(null);
+    fetchMessages();
+  };
+
+  const handleMarkMessageRead = async (msg: any) => {
+    if (!msg.is_read) {
+      await apiService.markMessageRead(msg.id);
+    }
+    setSelectedMsg(msg);
+  };
+
+  const handleDeleteMessage = async (msgId: string) => {
+    if (!window.confirm('메시지를 삭제하시겠습니까?')) return;
+    await apiService.deleteMessage(msgId);
+    setSelectedMsg(null);
+    fetchMessages();
+  };
+
+  const handleSearchUser = async () => {
+    if (!composeSearchTerm.trim()) {
+      alert('검색어를 입력하세요.');
+      return;
+    }
+    const results = await apiService.searchMessageRecipients(composeSearchTerm, composeRecType);
+    if (!results || results.length === 0) {
+      alert('검색 결과가 없습니다.');
+    }
+    setComposeSearchResults(results || []);
+  };
+
+  const handleSendMessage = async () => {
+    if (!composeSelectedUser || !composeContent.trim()) {
+      alert('수신자와 내용을 모두 입력해주세요.');
+      return;
+    }
+    setComposeSending(true);
+    const result = await apiService.sendMessage({
+      sender_id: user.id,
+      sender_type: 'user',
+      sender_name: user.nickname || user.realName || '',
+      receiver_id: composeSelectedUser.id,
+      receiver_type: composeRecType,
+      receiver_name: composeSelectedUser.name,
+      subject: composeSubject,
+      content: composeContent
+    });
+    setComposeSending(false);
+    if (result.success) {
+      alert('메시지가 전송되었습니다.');
+      setShowComposeMsg(false);
+      setComposeContent('');
+      setComposeSubject('');
+      setComposeSearchTerm('');
+      setComposeSearchResults([]);
+      setComposeSelectedUser(null);
+      fetchMessages();
+      if (msgTab !== 'sent') setMsgTab('sent');
+    } else {
+      alert('전송 실패: ' + (result.error || ''));
+    }
+  };
 
   const handleUpdateField = async (field: 'email' | 'phone' | 'password') => {
     if (!editValue.trim() || !user) return;
@@ -268,6 +374,7 @@ const MyPage: React.FC = () => {
           <div className="flex gap-2 p-1.5 bg-zinc-100 dark:bg-zinc-900 rounded-2xl w-fit">
             {[
               { id: 'info', name: 'Profile', icon: 'person' },
+              { id: 'messages', name: 'Messages', icon: 'mail' },
               { id: 'service', name: 'Service', icon: 'grid_view' },
               { id: 'payment', name: 'Points', icon: 'account_balance_wallet' }
             ].map(tab => (
@@ -453,6 +560,133 @@ const MyPage: React.FC = () => {
                     </p>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Section 4: Messages */}
+            {activeTab === 'messages' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-black tracking-tight">Messages</h3>
+                  <button
+                    onClick={() => setShowComposeMsg(true)}
+                    className="px-5 py-2.5 bg-primary text-[#1b180d] rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-lg">edit</span>
+                    새 메시지
+                  </button>
+                </div>
+
+                {/* Msg Tabs */}
+                <div className="flex gap-2 bg-gray-100 dark:bg-zinc-800/50 p-1.5 rounded-2xl w-fit">
+                  {(['inbox', 'sent'] as const).map(t => (
+                    <button
+                      key={t}
+                      onClick={() => { setMsgTab(t); setSelectedMsg(null); }}
+                      className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${msgTab === t ? 'bg-white dark:bg-zinc-700 text-primary shadow-sm' : 'text-zinc-400 hover:text-zinc-600'}`}
+                    >
+                      {t === 'inbox' ? '📥 수신함' : '📤 발신함'}
+                    </button>
+                  ))}
+                </div>
+
+                {isLoadingMessages ? (
+                  <div className="flex items-center justify-center py-20">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="py-20 text-center bg-white dark:bg-zinc-900 rounded-[2rem] border border-zinc-200 dark:border-white/5 shadow-xl">
+                    <span className="material-symbols-outlined text-5xl text-zinc-300 mb-4 block">inbox</span>
+                    <p className="text-zinc-400 font-bold uppercase tracking-widest text-[10px]">메시지가 없습니다</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* Msg List */}
+                    <div className="lg:col-span-5 space-y-3">
+                      {messages.map(msg => (
+                        <div
+                          key={msg.id}
+                          onClick={() => handleMarkMessageRead(msg)}
+                          className={`p-5 rounded-2xl border cursor-pointer transition-all hover:shadow-md ${selectedMsg?.id === msg.id ? 'border-primary bg-primary/5' : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'} ${!msg.is_read && msgTab === 'inbox' ? 'border-l-4 border-l-primary' : ''}`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="font-black text-sm text-zinc-800 dark:text-zinc-200">{msgTab === 'inbox' ? msg.sender_name : msg.receiver_name}</p>
+                            <p className="text-[10px] text-zinc-400 font-bold">{new Date(msg.created_at).toLocaleDateString('ko-KR')}</p>
+                          </div>
+                          <p className="text-xs font-bold text-primary mb-1">{msg.subject || '(제목 없음)'}</p>
+                          <p className="text-xs text-zinc-500 line-clamp-2">{msg.content}</p>
+                          {msg.sender_type === 'system' && (
+                            <span className="inline-block mt-2 text-[9px] font-black bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full uppercase tracking-tighter">시스템 알림</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Msg Detail */}
+                    <div className="lg:col-span-7">
+                      {selectedMsg ? (
+                        <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-zinc-200 dark:border-white/5 shadow-xl space-y-6">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="text-lg font-black">{selectedMsg.subject || '(제목 없음)'}</h3>
+                              <p className="text-[10px] text-zinc-400 font-bold mt-1 uppercase tracking-widest">
+                                {msgTab === 'inbox' ? `보낸 사람: ${selectedMsg.sender_name}` : `받는 사람: ${selectedMsg.receiver_name}`}
+                                &nbsp;·&nbsp;{new Date(selectedMsg.created_at).toLocaleString('ko-KR')}
+                              </p>
+                            </div>
+                            {selectedMsg.sender_type === 'system' && (
+                              <span className="text-[9px] font-black bg-blue-500/10 text-blue-500 px-3 py-1 rounded-full uppercase">시스템</span>
+                            )}
+                          </div>
+
+                          <div className="bg-zinc-50 dark:bg-white/5 rounded-2xl p-6 text-sm leading-relaxed whitespace-pre-wrap">
+                            {selectedMsg.content}
+                          </div>
+
+                          {selectedMsg.replied === 1 && selectedMsg.reply_text && (
+                            <div className="bg-primary/5 rounded-2xl p-6 border border-primary/10">
+                              <p className="text-[10px] font-black text-primary uppercase mb-2 tracking-widest">💬 나의 답장</p>
+                              <p className="text-sm">{selectedMsg.reply_text}</p>
+                            </div>
+                          )}
+
+                          {/* Reply Area */}
+                          {msgTab === 'inbox' && selectedMsg.sender_type !== 'system' && !selectedMsg.replied && (
+                            <div className="space-y-3 pt-4 border-t border-zinc-100 dark:border-white/5">
+                              <textarea
+                                rows={3}
+                                value={replyText}
+                                onChange={(e) => setReplyText(e.target.value)}
+                                placeholder="답장을 입력하세요..."
+                                className="w-full bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-2xl px-5 py-4 text-sm focus:border-primary outline-none transition-all resize-none"
+                              />
+                              <div className="flex justify-between items-center">
+                                <button
+                                  onClick={() => handleDeleteMessage(selectedMsg.id)}
+                                  className="px-4 py-2 text-red-500 text-[10px] font-black uppercase tracking-widest hover:bg-red-500/10 rounded-xl transition-colors"
+                                >
+                                  삭제
+                                </button>
+                                <button
+                                  onClick={() => handleReplyMessage(selectedMsg.id)}
+                                  disabled={replying || !replyText.trim()}
+                                  className="px-8 py-3 bg-primary text-[#1b180d] rounded-xl font-black text-[10px] uppercase tracking-widest disabled:opacity-50 hover:scale-105 active:scale-95 transition-all"
+                                >
+                                  {replying ? '전송 중...' : '답장 보내기'}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-16 border border-zinc-200 dark:border-white/5 shadow-xl flex flex-col items-center justify-center text-center">
+                          <span className="material-symbols-outlined text-5xl text-zinc-200 mb-4">mark_email_read</span>
+                          <p className="text-zinc-400 font-bold text-[10px] uppercase tracking-widest">메시지를 선택하세요</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -703,6 +937,115 @@ const MyPage: React.FC = () => {
                 Go to Inquiry Center
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Compose Message Modal */}
+      {showComposeMsg && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-lg animate-fade-in" onClick={() => setShowComposeMsg(false)}>
+          <div className="bg-white dark:bg-zinc-900 rounded-[2rem] w-full max-w-lg shadow-2xl p-8 space-y-6 flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between shrink-0">
+              <h3 className="text-lg font-black tracking-tight">새 메시지 작성</h3>
+              <button onClick={() => setShowComposeMsg(false)} className="size-10 rounded-full hover:bg-zinc-100 dark:hover:bg-white/5 flex items-center justify-center transition-colors">
+                <span className="material-symbols-outlined text-sm">close</span>
+              </button>
+            </div>
+
+            <div className="overflow-y-auto pr-2 space-y-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest pl-1">수신자 유형</label>
+                <div className="flex gap-2">
+                  {[
+                    { val: 'user', label: '👤 일반 회원' },
+                    { val: 'cca', label: '💃 스태프 (CCA)' },
+                    { val: 'venue_admin', label: '🏪 업체 관리자' }
+                  ].map(type => (
+                    <button
+                      key={type.val}
+                      onClick={() => { setComposeRecType(type.val); setComposeSearchResults([]); setComposeSelectedUser(null); }}
+                      className={`flex-1 py-3 px-2 rounded-xl text-[10px] font-black tracking-tighter uppercase transition-colors border ${composeRecType === type.val ? 'bg-primary/10 border-primary text-primary' : 'bg-transparent border-zinc-200 dark:border-zinc-700 text-zinc-500 hover:border-zinc-300'}`}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 수신자 검색 */}
+              {!composeSelectedUser ? (
+                <div className="space-y-2 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 bg-zinc-50 dark:bg-zinc-900/50">
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest pl-1">수신자 닉네임 / 업체명 검색</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={composeSearchTerm}
+                      onChange={(e) => setComposeSearchTerm(e.target.value)}
+                      placeholder="검색어를 입력하세요..."
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearchUser()}
+                      className="flex-1 bg-white dark:bg-zinc-800 rounded-xl px-4 py-3 text-sm font-bold border border-zinc-200 dark:border-zinc-700 outline-none focus:border-primary"
+                    />
+                    <button
+                      onClick={handleSearchUser}
+                      className="px-4 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-zinc-800 transition-colors"
+                    >
+                      검색
+                    </button>
+                  </div>
+                  {composeSearchResults.length > 0 && (
+                    <div className="mt-3 max-h-40 overflow-y-auto space-y-2">
+                      {composeSearchResults.map(user => (
+                        <div key={user.id} className="flex items-center justify-between p-3 bg-white dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 rounded-xl hover:border-primary cursor-pointer transition-colors" onClick={() => setComposeSelectedUser(user)}>
+                          <p className="font-bold text-sm tracking-tighter">{user.name}</p>
+                          <span className="text-[9px] font-black text-primary uppercase tracking-widest bg-primary/10 px-2 py-1 rounded">선택</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center justify-between bg-primary/10 border border-primary/20 p-4 rounded-2xl">
+                  <div>
+                    <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-0.5">선택된 수신자</p>
+                    <p className="font-black tracking-tighter">{composeSelectedUser.name}</p>
+                  </div>
+                  <button onClick={() => setComposeSelectedUser(null)} className="text-[10px] font-black bg-white dark:bg-zinc-900 px-3 py-1.5 rounded-lg border border-primary/20 text-zinc-500 hover:text-black dark:hover:text-white transition-colors">
+                    다시 검색
+                  </button>
+                </div>
+              )}
+
+              <div className="space-y-2 pt-2">
+                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest pl-1">제목</label>
+                <input
+                  type="text"
+                  value={composeSubject}
+                  onChange={(e) => setComposeSubject(e.target.value)}
+                  placeholder="제목 (선택사항)"
+                  className="w-full bg-white dark:bg-zinc-800 rounded-2xl px-5 py-4 font-bold text-sm border border-zinc-200 dark:border-zinc-700 outline-none"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest pl-1">내용 *</label>
+                <textarea
+                  rows={4}
+                  value={composeContent}
+                  onChange={(e) => setComposeContent(e.target.value)}
+                  placeholder="메시지 내용을 입력하세요..."
+                  className="w-full bg-white dark:bg-zinc-800 rounded-2xl px-5 py-4 font-bold text-sm border border-zinc-200 dark:border-zinc-700 outline-none resize-none"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={handleSendMessage}
+              disabled={composeSending || !composeContent.trim() || !composeSelectedUser}
+              className="w-full shrink-0 py-4 bg-primary text-[#1b180d] rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-primary/20 disabled:opacity-50 hover:scale-[1.02] active:scale-95 transition-transform flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined text-lg">send</span>
+              {composeSending ? '전송 중...' : '메시지 보내기'}
+            </button>
           </div>
         </div>
       )}

@@ -1300,6 +1300,134 @@ export const apiService = {
       console.error('updateCCARequestStatus error:', error);
       return false;
     }
+  },
+
+  // ═══════════════════════════════════════════
+  // 통합 메시지 (Messages)
+  // ═══════════════════════════════════════════
+
+  async getMessages(params: { receiverId?: string; receiverType?: string; senderId?: string; senderType?: string; limit?: number }): Promise<any[]> {
+    try {
+      const query = new URLSearchParams();
+      if (params.receiverId) query.set('receiverId', params.receiverId);
+      if (params.receiverType) query.set('receiverType', params.receiverType);
+      if (params.senderId) query.set('senderId', params.senderId);
+      if (params.senderType) query.set('senderType', params.senderType);
+      if (params.limit) query.set('limit', params.limit.toString());
+      const response = await fetch(`${API_BASE}/messages?${query.toString()}`);
+      if (!response.ok) return [];
+      return await response.json();
+    } catch (error) {
+      console.error('getMessages error:', error);
+      return [];
+    }
+  },
+
+  async sendMessage(data: {
+    sender_id: string;
+    sender_type: string;
+    sender_name?: string;
+    receiver_id: string;
+    receiver_type: string;
+    receiver_name?: string;
+    subject?: string;
+    content: string;
+    parent_id?: string;
+  }): Promise<{ success: boolean; id?: string; error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return await response.json();
+    } catch (error: any) {
+      console.error('sendMessage error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  async replyMessage(id: string, replyText: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${API_BASE}/messages`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, reply_text: replyText }),
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('replyMessage error:', error);
+      return false;
+    }
+  },
+
+  async markMessageRead(id: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${API_BASE}/messages`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, is_read: true }),
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('markMessageRead error:', error);
+      return false;
+    }
+  },
+
+  async deleteMessage(id: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${API_BASE}/messages?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('deleteMessage error:', error);
+      return false;
+    }
+  },
+
+  async searchMessageRecipients(query: string, type: string = 'all'): Promise<any[]> {
+    try {
+      const response = await fetch(`${API_BASE}/message-search?q=${encodeURIComponent(query)}&type=${type}`);
+      if (!response.ok) return [];
+      return await response.json();
+    } catch (error) {
+      console.error('searchMessageRecipients error:', error);
+      return [];
+    }
+  },
+
+  // ═══════════════════════════════════════════
+  // CCA 좋아요 (CCA Likes)
+  // ═══════════════════════════════════════════
+
+  async getCCALikes(ccaId: string, userId?: string): Promise<{ count: number; liked: boolean }> {
+    try {
+      let url = `${API_BASE}/cca-likes?ccaId=${encodeURIComponent(ccaId)}`;
+      if (userId) url += `&userId=${encodeURIComponent(userId)}`;
+      const response = await fetch(url);
+      if (!response.ok) return { count: 0, liked: false };
+      return await response.json();
+    } catch (error) {
+      console.error('getCCALikes error:', error);
+      return { count: 0, liked: false };
+    }
+  },
+
+  async toggleCCALike(ccaId: string, userId: string): Promise<{ liked: boolean; count: number }> {
+    try {
+      const response = await fetch(`${API_BASE}/cca-likes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cca_id: ccaId, user_id: userId }),
+      });
+      if (!response.ok) return { liked: false, count: 0 };
+      return await response.json();
+    } catch (error) {
+      console.error('toggleCCALike error:', error);
+      return { liked: false, count: 0 };
+    }
   }
 };
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { apiService } from '../services/apiService';
 import { Venue, CCA } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 
 const VenueDetail: React.FC = () => {
    const { id } = useParams();
@@ -25,6 +26,41 @@ const VenueDetail: React.FC = () => {
       groupSize: 1,
       selectedCCAs: [] as string[]
    });
+
+   // Message state
+   const { user } = useAuth();
+   const [showMsgModal, setShowMsgModal] = useState(false);
+   const [msgSubject, setMsgSubject] = useState('');
+   const [msgContent, setMsgContent] = useState('');
+   const [msgSending, setMsgSending] = useState(false);
+   const [msgSuccess, setMsgSuccess] = useState(false);
+
+   const handleSendMessage = async () => {
+      if (!venue || !user || !msgContent.trim()) return;
+      setMsgSending(true);
+      const result = await apiService.sendMessage({
+         sender_id: user.id,
+         sender_type: 'user',
+         sender_name: user.nickname || user.realName || '',
+         receiver_id: venue.id,
+         receiver_type: 'venue_admin',
+         receiver_name: venue.name,
+         subject: msgSubject || `${user.nickname || '고객'}님의 메시지`,
+         content: msgContent
+      });
+      setMsgSending(false);
+      if (result.success) {
+         setMsgSuccess(true);
+         setTimeout(() => {
+            setShowMsgModal(false);
+            setMsgSuccess(false);
+            setMsgContent('');
+            setMsgSubject('');
+         }, 2000);
+      } else {
+         alert('메시지 전송 실패: ' + (result.error || ''));
+      }
+   };
 
    useEffect(() => {
       const fetchData = async () => {
@@ -200,16 +236,20 @@ const VenueDetail: React.FC = () => {
                   </span>
                </div>
                <div className="flex gap-2">
-                  {venue.sns?.telegram && (
-                     <button className="size-10 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center hover:bg-blue-500 hover:text-white transition-all">
-                        <span className="material-symbols-outlined text-xl">send</span>
-                     </button>
-                  )}
-                  {venue.phone && (
-                     <button className="size-10 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center hover:bg-green-500 hover:text-white transition-all">
-                        <span className="material-symbols-outlined text-xl">call</span>
-                     </button>
-                  )}
+                  <button
+                     onClick={() => {
+                        if (!user) {
+                           alert('메시지를 보내려면 로그인이 필요합니다.');
+                           navigate('/login', { state: { returnTo: `/venues/${id}` } });
+                           return;
+                        }
+                        setShowMsgModal(true);
+                     }}
+                     className="px-5 py-2.5 bg-primary/10 text-primary rounded-xl flex items-center gap-2 hover:bg-primary hover:text-[#1b180d] transition-all font-black text-xs uppercase tracking-widest"
+                  >
+                     <span className="material-symbols-outlined text-lg">mail</span>
+                     Message
+                  </button>
                </div>
             </div>
 
@@ -612,6 +652,76 @@ const VenueDetail: React.FC = () => {
                         예약 신청하기
                      </button>
                   </form>
+               </div>
+            </div>
+         )}
+
+         {/* Message Modal */}
+         {showMsgModal && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-lg" onClick={() => setShowMsgModal(false)}>
+               <div className="bg-white dark:bg-zinc-900 rounded-[2rem] w-full max-w-lg shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                  {msgSuccess ? (
+                     <div className="py-20 flex flex-col items-center gap-4 animate-fade-in">
+                        <div className="size-20 bg-green-500/10 rounded-full flex items-center justify-center">
+                           <span className="material-symbols-outlined text-green-500 text-4xl">check_circle</span>
+                        </div>
+                        <p className="text-lg font-black dark:text-white">메시지가 전송되었습니다!</p>
+                     </div>
+                  ) : (
+                     <div className="p-8 space-y-6">
+                        <div className="flex items-center justify-between">
+                           <div className="flex items-center gap-3">
+                              <div className="size-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                                 <span className="material-symbols-outlined text-primary">mail</span>
+                              </div>
+                              <div>
+                                 <h3 className="text-lg font-black dark:text-white">{venue?.name}에게 메시지</h3>
+                                 <p className="text-[10px] text-gray-400 font-bold uppercase">Direct Message</p>
+                              </div>
+                           </div>
+                           <button onClick={() => setShowMsgModal(false)} className="size-10 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 flex items-center justify-center dark:text-white">
+                              <span className="material-symbols-outlined">close</span>
+                           </button>
+                        </div>
+
+                        <div className="space-y-2">
+                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">제목</label>
+                           <input
+                              type="text"
+                              value={msgSubject}
+                              onChange={(e) => setMsgSubject(e.target.value)}
+                              placeholder="메시지 제목 (선택사항)"
+                              className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-5 py-4 font-bold text-sm focus:border-primary outline-none transition-all dark:text-white"
+                           />
+                        </div>
+
+                        <div className="space-y-2">
+                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">내용 *</label>
+                           <textarea
+                              rows={5}
+                              value={msgContent}
+                              onChange={(e) => setMsgContent(e.target.value)}
+                              placeholder="메시지 내용을 입력하세요..."
+                              className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-5 py-4 font-bold text-sm focus:border-primary outline-none transition-all resize-none dark:text-white"
+                           />
+                        </div>
+
+                        <button
+                           onClick={handleSendMessage}
+                           disabled={msgSending || !msgContent.trim()}
+                           className="w-full py-5 bg-primary text-[#1b180d] rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                        >
+                           {msgSending ? (
+                              <div className="size-5 border-2 border-[#1b180d] border-t-transparent rounded-full animate-spin"></div>
+                           ) : (
+                              <>
+                                 <span className="material-symbols-outlined">send</span>
+                                 메시지 보내기
+                              </>
+                           )}
+                        </button>
+                     </div>
+                  )}
                </div>
             </div>
          )}

@@ -16,8 +16,10 @@ const CCAPortalLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
    const navItems = [
       { path: '/cca-portal', icon: 'home_app_logo', label: 'Home' },
+      { path: '/cca-portal/messages', icon: 'mail', label: 'Messages' },
       { path: '/cca-portal/schedule', icon: 'calendar_today', label: 'Schedule' },
       { path: '/cca-portal/gallery', icon: 'photo_library', label: 'Gallery' },
+      { path: '/cca-portal/inquiry', icon: 'support_agent', label: 'System Inquiry' },
       { path: '/cca-portal/settings', icon: 'person_outline', label: 'Settings' }
    ];
 
