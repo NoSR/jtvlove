@@ -66,6 +66,7 @@ const SuperPartners: React.FC = () => {
 
    const handleAddNew = () => {
       setIsCreateMode(true);
+      setSelectedItem(null);
       if (activeTab === 'venues') {
          setEditForm({
             name: '',
@@ -198,9 +199,16 @@ const SuperPartners: React.FC = () => {
                description: editForm.introduction || editForm.description || ''
             };
 
+            const venueId = isCreateMode ? undefined : (editForm.id || selectedItem?.id);
+            if (!isCreateMode && !venueId) {
+               alert("수정 시 업소 ID가 누락되었습니다. 창을 닫고 다시 시도해 주세요.");
+               setIsSaving(false);
+               return;
+            }
+
             const result = isCreateMode
                ? await apiService.createVenue(updates)
-               : await apiService.updateVenue(selectedItem?.id, updates);
+               : await apiService.updateVenue(venueId as string, updates);
 
             if (result.success) {
                alert(`Venue ${isCreateMode ? 'registered' : 'updated'} successfully`);
