@@ -33,7 +33,7 @@ export const onRequest: any = async (context: any) => {
 
         try {
             const { results } = await env.DB.prepare(
-                `SELECT * FROM venue_notices WHERE venue_id = ? ORDER BY is_pinned DESC, created_at DESC LIMIT 7`
+                `SELECT * FROM venue_notices WHERE venue_id = ? ORDER BY is_pinned DESC, created_at DESC`
             ).bind(venueId).all();
 
             return new Response(JSON.stringify(results || []), {

@@ -14,6 +14,8 @@ const VenueDetail: React.FC = () => {
    const [showBookingModal, setShowBookingModal] = useState(false);
    const [venueNotices, setVenueNotices] = useState<any[]>([]);
    const [expandedNoticeId, setExpandedNoticeId] = useState<string | null>(null);
+   const [noticePage, setNoticePage] = useState(1);
+   const NOTICES_PER_PAGE = 7;
    const [bookingForm, setBookingForm] = useState({
       date: new Date().toISOString().split('T')[0],
       time: '19:00',
@@ -412,40 +414,75 @@ const VenueDetail: React.FC = () => {
                </div>
 
                {venueNotices.length > 0 ? (
-                  <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-primary/5 shadow-xl overflow-hidden divide-y divide-zinc-100 dark:divide-zinc-800">
-                     {venueNotices.map((notice: any) => {
-                        const isExpanded = expandedNoticeId === notice.id;
-                        const dateStr = notice.created_at ? new Date(notice.created_at).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }) : '';
-                        return (
-                           <div
-                              key={notice.id}
-                              className={`transition-all cursor-pointer ${notice.is_pinned ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-zinc-50 dark:hover:bg-white/5'}`}
-                              onClick={() => setExpandedNoticeId(isExpanded ? null : notice.id)}
-                           >
-                              <div className="flex items-center justify-between px-8 py-5">
-                                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                                    {notice.is_pinned ? (
-                                       <span className="material-symbols-outlined text-primary text-lg flex-shrink-0">push_pin</span>
-                                    ) : (
-                                       <span className="material-symbols-outlined text-zinc-300 dark:text-zinc-600 text-lg flex-shrink-0">article</span>
-                                    )}
-                                    <p className={`font-bold text-sm truncate ${notice.is_pinned ? 'text-primary' : ''}`}>{notice.title}</p>
-                                 </div>
-                                 <div className="flex items-center gap-3 flex-shrink-0 ml-4">
-                                    <span className="text-[10px] font-bold text-zinc-400">{dateStr}</span>
-                                    <span className={`material-symbols-outlined text-zinc-400 text-sm transition-transform ${isExpanded ? 'rotate-180' : ''}`}>expand_more</span>
-                                 </div>
-                              </div>
-                              {isExpanded && (
-                                 <div className="px-8 pb-6 pt-0">
-                                    <div className="bg-zinc-50 dark:bg-black/30 rounded-2xl p-6 border border-zinc-100 dark:border-zinc-800">
-                                       <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed whitespace-pre-wrap">{notice.content}</p>
+                  <div className="space-y-4">
+                     <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-primary/5 shadow-xl overflow-hidden divide-y divide-zinc-100 dark:divide-zinc-800">
+                        {venueNotices
+                           .slice((noticePage - 1) * NOTICES_PER_PAGE, noticePage * NOTICES_PER_PAGE)
+                           .map((notice: any) => {
+                              const isExpanded = expandedNoticeId === notice.id;
+                              const dateStr = notice.created_at ? new Date(notice.created_at).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' }) : '';
+                              return (
+                                 <div
+                                    key={notice.id}
+                                    className={`transition-all cursor-pointer ${notice.is_pinned ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-zinc-50 dark:hover:bg-white/5'}`}
+                                    onClick={() => setExpandedNoticeId(isExpanded ? null : notice.id)}
+                                 >
+                                    <div className="flex items-center justify-between px-8 py-5">
+                                       <div className="flex items-center gap-3 flex-1 min-w-0">
+                                          {notice.is_pinned ? (
+                                             <span className="material-symbols-outlined text-primary text-lg flex-shrink-0">push_pin</span>
+                                          ) : (
+                                             <span className="material-symbols-outlined text-zinc-300 dark:text-zinc-600 text-lg flex-shrink-0">article</span>
+                                          )}
+                                          <p className={`font-bold text-sm truncate ${notice.is_pinned ? 'text-primary' : ''}`}>{notice.title}</p>
+                                       </div>
+                                       <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+                                          <span className="text-[10px] font-bold text-zinc-400">{dateStr}</span>
+                                          <span className={`material-symbols-outlined text-zinc-400 text-sm transition-transform ${isExpanded ? 'rotate-180' : ''}`}>expand_more</span>
+                                       </div>
                                     </div>
+                                    {isExpanded && (
+                                       <div className="px-8 pb-6 pt-0">
+                                          <div className="bg-zinc-50 dark:bg-black/30 rounded-2xl p-6 border border-zinc-100 dark:border-zinc-800">
+                                             <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed whitespace-pre-wrap">{notice.content}</p>
+                                          </div>
+                                       </div>
+                                    )}
                                  </div>
-                              )}
+                              );
+                           })}
+                     </div>
+
+                     {/* Pagination Controls */}
+                     {venueNotices.length > NOTICES_PER_PAGE && (
+                        <div className="flex justify-center items-center gap-2 pt-2">
+                           <button
+                              onClick={() => setNoticePage(p => Math.max(1, p - 1))}
+                              disabled={noticePage === 1}
+                              className="size-8 rounded-full border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-primary hover:border-primary disabled:opacity-30 disabled:hover:border-zinc-200 disabled:hover:text-zinc-400 transition-all"
+                           >
+                              <span className="material-symbols-outlined text-sm">chevron_left</span>
+                           </button>
+                           <div className="flex items-center gap-1">
+                              {Array.from({ length: Math.ceil(venueNotices.length / NOTICES_PER_PAGE) }).map((_, idx) => (
+                                 <button
+                                    key={idx}
+                                    onClick={() => setNoticePage(idx + 1)}
+                                    className={`size-8 rounded-full text-xs font-black transition-all ${noticePage === idx + 1 ? 'bg-primary text-[#1b180d] shadow-md shadow-primary/20' : 'text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}
+                                 >
+                                    {idx + 1}
+                                 </button>
+                              ))}
                            </div>
-                        );
-                     })}
+                           <button
+                              onClick={() => setNoticePage(p => Math.min(Math.ceil(venueNotices.length / NOTICES_PER_PAGE), p + 1))}
+                              disabled={noticePage === Math.ceil(venueNotices.length / NOTICES_PER_PAGE)}
+                              className="size-8 rounded-full border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-primary hover:border-primary disabled:opacity-30 disabled:hover:border-zinc-200 disabled:hover:text-zinc-400 transition-all"
+                           >
+                              <span className="material-symbols-outlined text-sm">chevron_right</span>
+                           </button>
+                        </div>
+                     )}
                   </div>
                ) : (
                   <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-primary/5 shadow-xl py-16 text-center">
