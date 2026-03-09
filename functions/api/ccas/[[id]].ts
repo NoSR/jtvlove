@@ -62,9 +62,13 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
         });
       }
 
+      try {
+        await env.DB.prepare("ALTER TABLE ccas ADD COLUMN pending_venue_id TEXT").run();
+      } catch (e: any) { }
+
       if (venueIdParam) {
-        query += " WHERE c.venue_id = ?";
-        queryParams.push(venueIdParam);
+        query += " WHERE c.venue_id = ? OR c.pending_venue_id = ?";
+        queryParams.push(venueIdParam, venueIdParam);
       }
 
       const { results } = await env.DB.prepare(query).bind(...queryParams).all();
@@ -91,6 +95,10 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
         viewsCount: c.views_count,
         likesCount: c.likes_count,
         postsCount: c.posts_count,
+        pendingVenueId: c.pending_venue_id,
+        // 현재 조회하는 venue가 이 CCA의 pending venue인 경우, 프론트에선 applicant로 처리되도록 강제 변경
+        status: (venueIdParam && c.pending_venue_id === venueIdParam) ? 'applicant' : c.status,
+        originalStatus: c.status,
         isNew: c.is_new === 1
       }));
 
@@ -130,21 +138,21 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
 
       const targetId = id || bodyId || `cca_${Date.now()}`;
 
-      // Fallback logic
-      const f_realNameFirst = realNameFirst || real_name_first || '';
-      const f_realNameMiddle = realNameMiddle || real_name_middle || '';
-      const f_realNameLast = realNameLast || real_name_last || '';
-      const f_oneLineStory = oneLineStory || one_line_story || '';
-      const f_sns = sns || sns_links || {};
-      const f_experienceHistory = experienceHistory || experience_history || [];
-      const f_maritalStatus = maritalStatus || marital_status || 'SINGLE';
-      const f_childrenStatus = childrenStatus || children_status || 'NONE';
-      const f_specialNotes = specialNotes || special_notes || '';
-      const f_venueId = venueId || venue_id || 'v1';
-      const f_isNew = (isNew !== undefined ? isNew : (is_new !== undefined ? is_new : false));
-      const f_languages = languages || [];
-      const f_specialties = specialties || [];
-      const f_name = nickname || name || '';
+      const f_realNameFirst = realNameFirst ?? real_name_first ?? null;
+      const f_realNameMiddle = realNameMiddle ?? real_name_middle ?? null;
+      const f_realNameLast = realNameLast ?? real_name_last ?? null;
+      const f_oneLineStory = oneLineStory ?? one_line_story ?? null;
+      const f_sns = sns ?? sns_links ?? null;
+      const f_experienceHistory = experienceHistory ?? experience_history ?? null;
+      const f_maritalStatus = maritalStatus ?? marital_status ?? null;
+      const f_childrenStatus = childrenStatus ?? children_status ?? null;
+      const f_specialNotes = specialNotes ?? special_notes ?? null;
+      let f_venueId = venueId ?? venue_id ?? null; // 수정 전 venueId
+      const f_isNew = isNew ?? is_new ?? null;
+      const f_languages = languages ?? null;
+      const f_specialties = specialties ?? null;
+      const f_name = nickname ?? name ?? null;
+      const isProfileUpdate = body.isProfileUpdate === true;
 
       if (!id && !bodyId) {
         // CREATE
@@ -167,21 +175,21 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
           birthday || '',
           address || '',
           phone || '',
-          f_venueId,
+          f_venueId || 'v1',
           image || '',
           status || 'active',
           grade || 'PRO',
           password || '1234',
-          f_maritalStatus,
-          f_childrenStatus,
-          f_specialNotes,
-          JSON.stringify(f_experienceHistory),
-          JSON.stringify(f_languages),
-          JSON.stringify(f_specialties),
+          f_maritalStatus || 'SINGLE',
+          f_childrenStatus || 'NONE',
+          f_specialNotes || '',
+          JSON.stringify(f_experienceHistory || []),
+          JSON.stringify(f_languages || []),
+          JSON.stringify(f_specialties || []),
           mbti || '',
           zodiac || '',
-          f_oneLineStory,
-          JSON.stringify(f_sns),
+          f_oneLineStory || '',
+          JSON.stringify(f_sns || {}),
           f_isNew ? 1 : 0,
           weight || '',
           drinking || '',
@@ -195,8 +203,40 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
       } else {
         // UPDATE
         const updateId = id || bodyId;
+
+        // --- 승인 시스템 로직 ---
+        let currentStatus = status ?? null;
+
+        try {
+          await env.DB.prepare("ALTER TABLE ccas ADD COLUMN pending_venue_id TEXT").run();
+        } catch (e) { }
+
+        const currentData = await env.DB.prepare("SELECT venue_id, pending_venue_id FROM ccas WHERE id = ?").bind(updateId).first();
+
+        if (currentData) {
+          // 1. CCA가 프로필 페이지에서 업소를 변경하는 경우 -> 바로 변경하지 않고 pending_venue_id 로 저장
+          if (isProfileUpdate && f_venueId && currentData.venue_id !== f_venueId) {
+            await env.DB.prepare("UPDATE ccas SET pending_venue_id = ? WHERE id = ?").bind(f_venueId, updateId).run();
+            f_venueId = null; // 메인 업데이트 구문에서는 venue_id를 변경하지 않도록 null 처리
+          }
+
+          // 2. 다른 JTV 관리자가 AdminCCAs에서 'Acceptance of Employment' (status: 'active') 를 눌렀을 때
+          if (!isProfileUpdate && currentStatus === 'active' && currentData.pending_venue_id) {
+            // 대기중인 업소를 실제 소속으로 확정
+            f_venueId = currentData.pending_venue_id;
+            await env.DB.prepare("UPDATE ccas SET pending_venue_id = NULL WHERE id = ?").bind(updateId).run();
+          }
+
+          // 3. 다른 JTV 관리자가 AdminCCAs에서 'Decline' (status: 'inactive') 를 눌렀을 때
+          if (!isProfileUpdate && currentStatus === 'inactive' && currentData.pending_venue_id) {
+            // 이전 소속은 유지하고 pending_venue_id 만 삭제
+            await env.DB.prepare("UPDATE ccas SET pending_venue_id = NULL WHERE id = ?").bind(updateId).run();
+            currentStatus = null; // 원래 소속 업소에서는 active 상태여야 하므로 status 변경을 무시함
+          }
+        }
+
         const paramsList = [
-          f_name || null,
+          f_name,
           nickname || null,
           f_realNameFirst || null,
           f_realNameMiddle || null,
@@ -209,20 +249,20 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
           f_oneLineStory || null,
           f_sns ? JSON.stringify(f_sns) : null,
           f_experienceHistory ? JSON.stringify(f_experienceHistory) : null,
-          f_maritalStatus || null,
-          f_childrenStatus || null,
-          f_specialNotes || null,
+          f_maritalStatus,
+          f_childrenStatus,
+          f_specialNotes,
           image || null,
-          f_venueId || null,
+          f_venueId,
           password || null,
           f_languages ? JSON.stringify(f_languages) : null,
-          f_isNew !== undefined ? (f_isNew ? 1 : 0) : null,
+          f_isNew !== null ? (f_isNew ? 1 : 0) : null,
           weight || null,
           drinking || null,
           smoking || null,
           pets || null,
           f_specialties ? JSON.stringify(f_specialties) : null,
-          status || null,
+          currentStatus,
           grade || null,
           String(updateId)
         ];

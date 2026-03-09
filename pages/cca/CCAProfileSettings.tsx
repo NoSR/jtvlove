@@ -182,7 +182,7 @@ const CCAProfileSettings: React.FC = () => {
     if (!cca) return;
     setIsSaving(true);
     try {
-      const updateData = { ...formData };
+      const updateData = { ...formData, isProfileUpdate: true };
       if (newPassword) (updateData as any).password = newPassword;
 
       const result = await apiService.updateCCAProfile(cca.id, updateData);
