@@ -42,6 +42,7 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
                     frame_id TEXT,
                     points INTEGER DEFAULT 0,
                     role TEXT DEFAULT 'user',
+                    status TEXT DEFAULT 'active',
                     profile_image TEXT,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 );

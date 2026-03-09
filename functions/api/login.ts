@@ -36,6 +36,7 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
                     frame_id TEXT,
                     points INTEGER DEFAULT 0,
                     role TEXT DEFAULT 'user',
+                    status TEXT DEFAULT 'active',
                     profile_image TEXT,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 );
@@ -49,6 +50,12 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
             }
         } catch (e: any) {
             console.error("D1 table creation error:", e);
+        }
+
+        try {
+            await env.DB.prepare("ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'active'").run();
+        } catch (e: any) {
+            // Column already exists or error - ignore
         }
 
         if (!password) {
