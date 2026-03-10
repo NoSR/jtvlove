@@ -111,6 +111,18 @@ const Navigation = () => {
     const fetchSettings = async () => {
       const data = await apiService.getSiteSettings();
       setSettings(data);
+      if (data?.site_name) {
+        document.title = data.site_name;
+      }
+      if (data?.favicon_url) {
+        let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+        if (!link) {
+          link = document.createElement('link');
+          link.rel = 'icon';
+          document.getElementsByTagName('head')[0].appendChild(link);
+        }
+        link.href = data.favicon_url;
+      }
     };
     fetchSettings();
   }, []);

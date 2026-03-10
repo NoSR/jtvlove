@@ -68,6 +68,16 @@ const SuperSiteSettings: React.FC = () => {
     loadSettings();
   }, []);
 
+  const handleImageUpload = async (field: string, file: File) => {
+    const url = await apiService.uploadImage(file);
+    if (url) {
+      setSettings(prev => ({ ...prev, [field]: url }));
+    } else {
+      alert("이미지 업로드에 실패했습니다.");
+    }
+  };
+
+
   const handleSave = async () => {
     setIsSaving(true);
     setMessage(null);
@@ -162,24 +172,40 @@ const SuperSiteSettings: React.FC = () => {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Logo URL</label>
-                <input
-                  type="url"
-                  value={settings.logo_url}
-                  onChange={(e) => setSettings({ ...settings, logo_url: e.target.value })}
-                  placeholder="https://example.com/logo.png"
-                  className="w-full bg-black border-zinc-800 rounded-xl px-4 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-red-500"
-                />
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Logo (URL or Upload Base64)</label>
+                <div className="flex flex-col gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => e.target.files?.[0] && handleImageUpload('logo_url', e.target.files[0])}
+                    className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-red-500/10 file:text-red-500 hover:file:bg-red-500/20"
+                  />
+                  <input
+                    type="url"
+                    value={settings.logo_url}
+                    onChange={(e) => setSettings({ ...settings, logo_url: e.target.value })}
+                    placeholder="https://example.com/logo.png"
+                    className="w-full bg-black border-zinc-800 rounded-xl px-4 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-red-500"
+                  />
+                </div>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Favicon URL</label>
-                <input
-                  type="url"
-                  value={settings.favicon_url}
-                  onChange={(e) => setSettings({ ...settings, favicon_url: e.target.value })}
-                  placeholder="https://example.com/favicon.ico"
-                  className="w-full bg-black border-zinc-800 rounded-xl px-4 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-red-500"
-                />
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Favicon (URL or Upload Base64)</label>
+                <div className="flex flex-col gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => e.target.files?.[0] && handleImageUpload('favicon_url', e.target.files[0])}
+                    className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-red-500/10 file:text-red-500 hover:file:bg-red-500/20"
+                  />
+                  <input
+                    type="url"
+                    value={settings.favicon_url}
+                    onChange={(e) => setSettings({ ...settings, favicon_url: e.target.value })}
+                    placeholder="https://example.com/favicon.ico"
+                    className="w-full bg-black border-zinc-800 rounded-xl px-4 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-red-500"
+                  />
+                </div>
               </div>
             </div>
 
@@ -282,14 +308,22 @@ const SuperSiteSettings: React.FC = () => {
         </div>
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hero Image URL</label>
-            <input
-              type="url"
-              value={settings.venues_hero_image}
-              onChange={(e) => setSettings({ ...settings, venues_hero_image: e.target.value })}
-              placeholder="https://example.com/banner.jpg"
-              className="w-full bg-black border-zinc-800 rounded-xl px-4 py-3 font-bold text-sm focus:ring-1 focus:ring-purple-500 text-white"
-            />
+            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hero Image (URL or Upload Base64)</label>
+            <div className="flex flex-col gap-2">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => e.target.files?.[0] && handleImageUpload('venues_hero_image', e.target.files[0])}
+                className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-purple-500/10 file:text-purple-500 hover:file:bg-purple-500/20"
+              />
+              <input
+                type="url"
+                value={settings.venues_hero_image}
+                onChange={(e) => setSettings({ ...settings, venues_hero_image: e.target.value })}
+                placeholder="https://example.com/banner.jpg"
+                className="w-full bg-black border-zinc-800 rounded-xl px-4 py-3 font-bold text-sm focus:ring-1 focus:ring-purple-500 text-white"
+              />
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -324,14 +358,22 @@ const SuperSiteSettings: React.FC = () => {
         </div>
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hero Image URL</label>
-            <input
-              type="url"
-              value={settings.ccas_hero_image}
-              onChange={(e) => setSettings({ ...settings, ccas_hero_image: e.target.value })}
-              placeholder="https://example.com/cca-banner.jpg"
-              className="w-full bg-black border-zinc-800 rounded-xl px-4 py-3 font-bold text-sm focus:ring-1 focus:ring-amber-500 text-white"
-            />
+            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hero Image (URL or Upload Base64)</label>
+            <div className="flex flex-col gap-2">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => e.target.files?.[0] && handleImageUpload('ccas_hero_image', e.target.files[0])}
+                className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500/10 file:text-amber-500 hover:file:bg-amber-500/20"
+              />
+              <input
+                type="url"
+                value={settings.ccas_hero_image}
+                onChange={(e) => setSettings({ ...settings, ccas_hero_image: e.target.value })}
+                placeholder="https://example.com/cca-banner.jpg"
+                className="w-full bg-black border-zinc-800 rounded-xl px-4 py-3 font-bold text-sm focus:ring-1 focus:ring-amber-500 text-white"
+              />
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -366,14 +408,22 @@ const SuperSiteSettings: React.FC = () => {
         </div>
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hero Image URL</label>
-            <input
-              type="url"
-              value={settings.notice_hero_image}
-              onChange={(e) => setSettings({ ...settings, notice_hero_image: e.target.value })}
-              placeholder="https://example.com/notice-banner.jpg"
-              className="w-full bg-black border-zinc-800 rounded-xl px-4 py-3 font-bold text-sm focus:ring-1 focus:ring-emerald-500 text-white"
-            />
+            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hero Image (URL or Upload Base64)</label>
+            <div className="flex flex-col gap-2">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => e.target.files?.[0] && handleImageUpload('notice_hero_image', e.target.files[0])}
+                className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-500/10 file:text-emerald-500 hover:file:bg-emerald-500/20"
+              />
+              <input
+                type="url"
+                value={settings.notice_hero_image}
+                onChange={(e) => setSettings({ ...settings, notice_hero_image: e.target.value })}
+                placeholder="https://example.com/notice-banner.jpg"
+                className="w-full bg-black border-zinc-800 rounded-xl px-4 py-3 font-bold text-sm focus:ring-1 focus:ring-emerald-500 text-white"
+              />
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
