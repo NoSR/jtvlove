@@ -18,17 +18,24 @@ export const onRequestGet = async (context: { env: Env }) => {
 
   try {
     // 1. Ensure columns exist before reading (for simple automatic migrations)
-    const columnsToAdd = [
-      "venues_hero_image", "venues_hero_title", "venues_hero_subtitle",
-      "ccas_hero_image", "ccas_hero_title", "ccas_hero_subtitle",
-      "notice_hero_image", "notice_hero_title", "notice_hero_subtitle"
-    ];
-    for (const col of columnsToAdd) {
-      try {
-        await env.DB.prepare(`ALTER TABLE site_settings ADD COLUMN ${col} TEXT`).run();
-      } catch (e) {
-        // Ignore if already exists
+    try {
+      const { results: columns } = await env.DB.prepare("PRAGMA table_info(site_settings)").all();
+      if (columns && columns.length > 0) {
+        const existingCols = columns.map((c: any) => c.name);
+        const columnsToAdd = [
+          "venues_hero_image", "venues_hero_title", "venues_hero_subtitle",
+          "ccas_hero_image", "ccas_hero_title", "ccas_hero_subtitle",
+          "notice_hero_image", "notice_hero_title", "notice_hero_subtitle"
+        ];
+        
+        for (const col of columnsToAdd) {
+          if (!existingCols.includes(col)) {
+            await env.DB.prepare(`ALTER TABLE site_settings ADD COLUMN ${col} TEXT`).run();
+          }
+        }
       }
+    } catch (e) {
+      // Ignore migration errors
     }
 
     const result = await env.DB.prepare(
@@ -59,17 +66,24 @@ export const onRequestPost = async (context: { env: Env, request: Request }) => 
 
   try {
     // 1. Ensure columns exist before saving
-    const columnsToAdd = [
-      "venues_hero_image", "venues_hero_title", "venues_hero_subtitle",
-      "ccas_hero_image", "ccas_hero_title", "ccas_hero_subtitle",
-      "notice_hero_image", "notice_hero_title", "notice_hero_subtitle"
-    ];
-    for (const col of columnsToAdd) {
-      try {
-        await env.DB.prepare(`ALTER TABLE site_settings ADD COLUMN ${col} TEXT`).run();
-      } catch (e) {
-        // Ignore if already exists
+    try {
+      const { results: columns } = await env.DB.prepare("PRAGMA table_info(site_settings)").all();
+      if (columns && columns.length > 0) {
+        const existingCols = columns.map((c: any) => c.name);
+        const columnsToAdd = [
+          "venues_hero_image", "venues_hero_title", "venues_hero_subtitle",
+          "ccas_hero_image", "ccas_hero_title", "ccas_hero_subtitle",
+          "notice_hero_image", "notice_hero_title", "notice_hero_subtitle"
+        ];
+        
+        for (const col of columnsToAdd) {
+          if (!existingCols.includes(col)) {
+            await env.DB.prepare(`ALTER TABLE site_settings ADD COLUMN ${col} TEXT`).run();
+          }
+        }
       }
+    } catch (e) {
+      // Ignore migration errors
     }
 
     const body = await request.json();
