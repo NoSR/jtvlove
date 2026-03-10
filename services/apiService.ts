@@ -66,8 +66,10 @@ export const apiService = {
             const ctx = canvas.getContext('2d');
             ctx?.drawImage(img, 0, 0, width, height);
 
-            // 품질 0.3으로 더욱 강력하게 압축 (D1 SQLITE_TOOBIG 문제 해결)
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.3);
+            // PNG의 경우 투명도 유지를 위해 image/png 사용
+            // 그 외에는 용량 최적화를 위해 image/jpeg 사용
+            const outputType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+            const dataUrl = canvas.toDataURL(outputType, outputType === 'image/jpeg' ? 0.3 : undefined);
             resolve(dataUrl);
           };
         };
