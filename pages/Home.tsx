@@ -13,6 +13,7 @@ const Home: React.FC = () => {
   const [ccas, setCCAs] = useState<CCA[]>([]);
   const [venues, setVenues] = useState<Venue[]>([]);
   const [heroSections, setHeroSections] = useState<HeroSection[]>([]);
+  const [settings, setSettings] = useState<any>(null);
   const [currentCcaIndex, setCurrentCcaIndex] = useState(0);
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
   const [fade, setFade] = useState(true);
@@ -25,14 +26,16 @@ const Home: React.FC = () => {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        const [fetchedCCAs, fetchedVenues, fetchedHeros] = await Promise.all([
+        const [fetchedCCAs, fetchedVenues, fetchedHeros, fetchedSettings] = await Promise.all([
           apiService.getCCAs(),
           apiService.getVenues(),
-          apiService.getHeroSections()
+          apiService.getHeroSections(),
+          apiService.getSiteSettings()
         ]);
         setCCAs(fetchedCCAs);
         setVenues(fetchedVenues);
         setHeroSections(fetchedHeros);
+        setSettings(fetchedSettings);
       } catch (error) {
         console.error("Data load failed", error);
       } finally {
@@ -250,8 +253,14 @@ const Home: React.FC = () => {
           {/* Header */}
           <div className="flex items-end justify-between mb-10 px-4">
             <div>
-              <h3 className="text-xs font-bold text-primary uppercase tracking-[0.2em] mb-2">인기 CCA 리스트</h3>
-              <h2 className="text-2xl md:text-3xl font-extrabold">이번 주 화제의 <span className="text-primary">홍보 대사</span></h2>
+              <h3 className="text-xs font-bold text-primary uppercase tracking-[0.2em] mb-2">{settings?.ui_texts?.home_cca_subtitle || '인기 CCA 리스트'}</h3>
+              <h2 className="text-2xl md:text-3xl font-extrabold">
+                {settings?.ui_texts?.home_cca_title ? (
+                  <span dangerouslySetInnerHTML={{ __html: settings.ui_texts.home_cca_title }} />
+                ) : (
+                  <>이번 주 화제의 <span className="text-primary">홍보 대사</span></>
+                )}
+              </h2>
             </div>
             <div className="flex items-center gap-3">
               {/* Scroll Arrows (Desktop) */}
@@ -345,8 +354,14 @@ const Home: React.FC = () => {
           {/* Header */}
           <div className="flex items-end justify-between mb-12">
             <div>
-              <span className="text-primary font-bold tracking-[0.3em] uppercase text-xs mb-3 block">이달의 추천 업소</span>
-              <h2 className="text-3xl md:text-4xl font-extrabold font-display">최고의 <span className="text-primary">JTV</span> 라운지</h2>
+              <span className="text-primary font-bold tracking-[0.3em] uppercase text-xs mb-3 block">{settings?.ui_texts?.home_venue_subtitle || '이달의 추천 업소'}</span>
+              <h2 className="text-3xl md:text-4xl font-extrabold font-display">
+                {settings?.ui_texts?.home_venue_title ? (
+                  <span dangerouslySetInnerHTML={{ __html: settings.ui_texts.home_venue_title }} />
+                ) : (
+                  <>최고의 <span className="text-primary">JTV</span> 라운지</>
+                )}
+              </h2>
             </div>
             <Link to="/venues" className="text-sm font-semibold text-primary flex items-center gap-1 hover:gap-2 transition-all">
               전체 보기 <span className="material-symbols-outlined text-sm">arrow_forward</span>
@@ -447,29 +462,33 @@ const Home: React.FC = () => {
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <span className="inline-block px-5 py-2 bg-primary/15 text-primary text-[11px] font-black rounded-full uppercase tracking-[0.2em] mb-6 border border-primary/20">
-            Premium Experience
+            {settings?.ui_texts?.home_premium_title || 'PREMIUM EXPERIENCE'}
           </span>
           <h2 className="text-3xl md:text-5xl font-extrabold mb-6 leading-tight tracking-tight">
-            특별한 밤을 위한<br />
-            <span className="text-primary">최고의 선택</span>
+            {settings?.ui_texts?.home_premium_subtitle ? (
+              <span dangerouslySetInnerHTML={{ __html: settings.ui_texts.home_premium_subtitle }} />
+            ) : (
+              <>특별한 밤을 위한<br /><span className="text-primary">최고의 선택</span></>
+            )}
           </h2>
           <p className="text-slate-500 dark:text-slate-400 text-base md:text-lg mb-10 max-w-2xl mx-auto leading-relaxed">
-            JTV 협회가 인증한 프리미엄 업소와 검증된 CCA를 만나보세요.<br className="hidden md:block" />
-            안전하고 만족스러운 경험을 보장합니다.
+            {settings?.ui_texts?.home_premium_content || (
+              <>JTV 협회가 인증한 프리미엄 업소와 검증된 CCA를 만나보세요.<br className="hidden md:block" />안전하고 만족스러운 경험을 보장합니다.</>
+            )}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/ccas"
               className="inline-flex px-10 py-4 bg-primary text-[#1b180d] rounded-2xl font-black hover:shadow-2xl hover:shadow-primary/30 hover:scale-105 transition-all items-center justify-center gap-3 group text-base shadow-xl"
             >
-              CCA 둘러보기
+              {settings?.ui_texts?.home_btn_cca || 'CCA 둘러보기'}
               <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
             </Link>
             <Link
               to="/venues"
               className="inline-flex px-10 py-4 bg-white dark:bg-white/10 text-zinc-900 dark:text-white rounded-2xl font-black hover:shadow-xl hover:scale-105 transition-all items-center justify-center gap-3 group text-base border border-zinc-200 dark:border-white/10"
             >
-              업소 정보 보기
+              {settings?.ui_texts?.home_btn_venue || '업소 정보 보기'}
               <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">apartment</span>
             </Link>
           </div>

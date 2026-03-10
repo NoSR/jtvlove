@@ -14,7 +14,8 @@ const SuperAdminLayout: React.FC<{ children: React.ReactNode }> = ({ children })
       { path: '/super-admin/users', icon: 'manage_accounts', label: 'User Control' },
       { path: '/super-admin/messages', icon: 'forward_to_inbox', label: 'Messages' },
       { path: '/super-admin/inquiries', icon: 'contact_support', label: 'System Inquiry' },
-      { path: '/super-admin/notices', icon: 'campaign', label: '공지/이벤트' }
+      { path: '/super-admin/notices', icon: 'campaign', label: '공지/이벤트' },
+      { path: '/super-admin/texts', icon: 'text_fields', label: 'Text Manager' }
    ];
 
    return (

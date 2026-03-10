@@ -39,8 +39,8 @@ const Footer: React.FC = () => {
                             </div>
                         </div>
                         <p className="text-sm text-slate-400 leading-relaxed mt-4">
-                            {settings?.site_name ? `${settings.site_name} 공식 커뮤니티 플랫폼입니다.` : '필리핀 JTV 업소 인증 및 CCA 관리 협회.'}<br />
-                            안전하고 검증된 나이트라이프를 위한 공식 플랫폼입니다.
+                            {settings?.site_name ? `${settings.site_name} ` : ''}{settings?.ui_texts?.footer_desc_1 || '공식 커뮤니티 플랫폼입니다.'}<br />
+                            {settings?.ui_texts?.footer_desc_2 || '안전하고 검증된 나이트라이프를 위한 공식 플랫폼입니다.'}
                         </p>
                     </div>
 

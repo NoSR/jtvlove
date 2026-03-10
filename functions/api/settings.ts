@@ -32,6 +32,7 @@ export const onRequestGet = async (context: { env: Env }) => {
           venues_hero_image TEXT,
           venues_hero_title TEXT,
           venues_hero_subtitle TEXT,
+          ui_texts TEXT,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `).run();
@@ -47,7 +48,8 @@ export const onRequestGet = async (context: { env: Env }) => {
         const columnsToAdd = [
           "venues_hero_image", "venues_hero_title", "venues_hero_subtitle",
           "ccas_hero_image", "ccas_hero_title", "ccas_hero_subtitle",
-          "notice_hero_image", "notice_hero_title", "notice_hero_subtitle"
+          "notice_hero_image", "notice_hero_title", "notice_hero_subtitle",
+          "ui_texts"
         ];
         
         for (const col of columnsToAdd) {
@@ -102,6 +104,7 @@ export const onRequestPost = async (context: { env: Env, request: Request }) => 
           venues_hero_image TEXT,
           venues_hero_title TEXT,
           venues_hero_subtitle TEXT,
+          ui_texts TEXT,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `).run();
@@ -117,7 +120,8 @@ export const onRequestPost = async (context: { env: Env, request: Request }) => 
         const columnsToAdd = [
           "venues_hero_image", "venues_hero_title", "venues_hero_subtitle",
           "ccas_hero_image", "ccas_hero_title", "ccas_hero_subtitle",
-          "notice_hero_image", "notice_hero_title", "notice_hero_subtitle"
+          "notice_hero_image", "notice_hero_title", "notice_hero_subtitle",
+          "ui_texts"
         ];
         
         for (const col of columnsToAdd) {
@@ -135,7 +139,8 @@ export const onRequestPost = async (context: { env: Env, request: Request }) => 
       site_name, admin_phone, admin_email, admin_sns, hq_address, logo_url, favicon_url,
       venues_hero_image, venues_hero_title, venues_hero_subtitle,
       ccas_hero_image, ccas_hero_title, ccas_hero_subtitle,
-      notice_hero_image, notice_hero_title, notice_hero_subtitle
+      notice_hero_image, notice_hero_title, notice_hero_subtitle,
+      ui_texts
     } = body;
 
     // D1 (SQLite) UPSERT syntax
@@ -145,9 +150,10 @@ export const onRequestPost = async (context: { env: Env, request: Request }) => 
         venues_hero_image, venues_hero_title, venues_hero_subtitle,
         ccas_hero_image, ccas_hero_title, ccas_hero_subtitle,
         notice_hero_image, notice_hero_title, notice_hero_subtitle,
+        ui_texts,
         updated_at
       )
-      VALUES ('global', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      VALUES ('global', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       ON CONFLICT(id) DO UPDATE SET
         site_name = excluded.site_name,
         admin_phone = excluded.admin_phone,
@@ -165,6 +171,7 @@ export const onRequestPost = async (context: { env: Env, request: Request }) => 
         notice_hero_image = excluded.notice_hero_image,
         notice_hero_title = excluded.notice_hero_title,
         notice_hero_subtitle = excluded.notice_hero_subtitle,
+        ui_texts = excluded.ui_texts,
         updated_at = CURRENT_TIMESTAMP
     `).bind(
       site_name || '',
@@ -182,7 +189,8 @@ export const onRequestPost = async (context: { env: Env, request: Request }) => 
       ccas_hero_subtitle || '',
       notice_hero_image || '',
       notice_hero_title || '',
-      notice_hero_subtitle || ''
+      notice_hero_subtitle || '',
+      ui_texts || ''
     ).run();
 
     return new Response(JSON.stringify({ success: true }), {

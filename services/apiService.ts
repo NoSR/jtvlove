@@ -579,7 +579,11 @@ export const apiService = {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Server error');
       }
-      return await response.json();
+      const data = await response.json();
+      return {
+        ...data,
+        ui_texts: data.ui_texts ? JSON.parse(data.ui_texts) : {}
+      };
     } catch (error) {
       console.error("apiService.getSiteSettings Error:", error);
       return {
@@ -592,17 +596,22 @@ export const apiService = {
         favicon_url: '',
         venues_hero_image: '',
         venues_hero_title: '이달의 추천 JTV',
-        venues_hero_subtitle: '최고의 서비스와 품격을 보장합니다.'
+        venues_hero_subtitle: '최고의 서비스와 품격을 보장합니다.',
+        ui_texts: {}
       };
     }
   },
 
   async updateSiteSettings(data: any): Promise<boolean> {
     try {
+      const payload = { ...data };
+      if (payload.ui_texts && typeof payload.ui_texts === 'object') {
+        payload.ui_texts = JSON.stringify(payload.ui_texts);
+      }
       const response = await fetch(`${API_BASE}/settings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
