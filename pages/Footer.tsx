@@ -88,7 +88,7 @@ const Footer: React.FC = () => {
                             © 2026 {settings?.site_name || 'Philippine JTV Association'}. All rights reserved.
                         </p>
                         <p className="text-[10px] text-slate-600 uppercase tracking-widest">
-                            Powered by JTV LOVE Platform
+                            Powered by {settings?.site_name || 'JTV LOVE'} Platform
                         </p>
                     </div>
                 </div>
