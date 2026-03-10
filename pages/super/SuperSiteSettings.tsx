@@ -265,11 +265,36 @@ const SuperSiteSettings: React.FC = () => {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Logo Upload</label>
-                      <input type="file" onChange={(e) => e.target.files?.[0] && handleImageUpload('logo_url', e.target.files[0])} className="w-full text-[10px] text-gray-500 file:bg-red-600/10 file:text-red-500 file:border-0 file:px-4 file:py-2 file:rounded-lg file:font-black file:mr-4" />
+                      <div className="flex items-center gap-4">
+                        <div className="size-16 bg-black rounded-xl border border-white/5 flex items-center justify-center overflow-hidden flex-shrink-0">
+                          {settings.logo_url ? (
+                            <img src={settings.logo_url} className="size-full object-contain p-2" alt="Logo" />
+                          ) : (
+                            <span className="text-[8px] font-black text-zinc-700 uppercase">No Logo</span>
+                          )}
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <input type="file" onChange={(e) => e.target.files?.[0] && handleImageUpload('logo_url', e.target.files[0])} className="w-full text-[10px] text-gray-500 file:bg-red-600/10 file:text-red-500 file:border-0 file:px-4 file:py-2 file:rounded-lg file:font-black file:mr-4 cursor-pointer" />
+                          {settings.logo_url && <p className="text-[8px] text-zinc-500 truncate max-w-[200px]">{settings.logo_url.startsWith('data:') ? 'Base64 Encoded Image' : settings.logo_url}</p>}
+                        </div>
+                      </div>
                     </div>
+                    
                     <div className="space-y-2">
                       <label className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Favicon Upload</label>
-                      <input type="file" onChange={(e) => e.target.files?.[0] && handleImageUpload('favicon_url', e.target.files[0])} className="w-full text-[10px] text-gray-500 file:bg-red-600/10 file:text-red-500 file:border-0 file:px-4 file:py-2 file:rounded-lg file:font-black file:mr-4" />
+                      <div className="flex items-center gap-4">
+                        <div className="size-16 bg-black rounded-xl border border-white/5 flex items-center justify-center overflow-hidden flex-shrink-0">
+                          {settings.favicon_url ? (
+                            <img src={settings.favicon_url} className="size-8 object-contain" alt="Favicon" />
+                          ) : (
+                            <span className="text-[8px] font-black text-zinc-700 uppercase">No Icon</span>
+                          )}
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <input type="file" onChange={(e) => e.target.files?.[0] && handleImageUpload('favicon_url', e.target.files[0])} className="w-full text-[10px] text-gray-500 file:bg-red-600/10 file:text-red-500 file:border-0 file:px-4 file:py-2 file:rounded-lg file:font-black file:mr-4 cursor-pointer" />
+                          {settings.favicon_url && <p className="text-[8px] text-zinc-500 truncate max-w-[200px]">{settings.favicon_url.startsWith('data:') ? 'Base64 Encoded Icon' : settings.favicon_url}</p>}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
