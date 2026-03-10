@@ -18,18 +18,17 @@ export const onRequestGet = async (context: { env: Env }) => {
 
   try {
     // 1. Ensure columns exist before reading (for simple automatic migrations)
-    try {
-      await env.DB.prepare("ALTER TABLE site_settings ADD COLUMN venues_hero_image TEXT").run();
-      await env.DB.prepare("ALTER TABLE site_settings ADD COLUMN venues_hero_title TEXT").run();
-      await env.DB.prepare("ALTER TABLE site_settings ADD COLUMN venues_hero_subtitle TEXT").run();
-      await env.DB.prepare("ALTER TABLE site_settings ADD COLUMN ccas_hero_image TEXT").run();
-      await env.DB.prepare("ALTER TABLE site_settings ADD COLUMN ccas_hero_title TEXT").run();
-      await env.DB.prepare("ALTER TABLE site_settings ADD COLUMN ccas_hero_subtitle TEXT").run();
-      await env.DB.prepare("ALTER TABLE site_settings ADD COLUMN notice_hero_image TEXT").run();
-      await env.DB.prepare("ALTER TABLE site_settings ADD COLUMN notice_hero_title TEXT").run();
-      await env.DB.prepare("ALTER TABLE site_settings ADD COLUMN notice_hero_subtitle TEXT").run();
-    } catch (e: any) {
-      // Columns probably already exist; ignore error
+    const columnsToAdd = [
+      "venues_hero_image", "venues_hero_title", "venues_hero_subtitle",
+      "ccas_hero_image", "ccas_hero_title", "ccas_hero_subtitle",
+      "notice_hero_image", "notice_hero_title", "notice_hero_subtitle"
+    ];
+    for (const col of columnsToAdd) {
+      try {
+        await env.DB.prepare(`ALTER TABLE site_settings ADD COLUMN ${col} TEXT`).run();
+      } catch (e) {
+        // Ignore if already exists
+      }
     }
 
     const result = await env.DB.prepare(
@@ -60,18 +59,17 @@ export const onRequestPost = async (context: { env: Env, request: Request }) => 
 
   try {
     // 1. Ensure columns exist before saving
-    try {
-      await env.DB.prepare("ALTER TABLE site_settings ADD COLUMN venues_hero_image TEXT").run();
-      await env.DB.prepare("ALTER TABLE site_settings ADD COLUMN venues_hero_title TEXT").run();
-      await env.DB.prepare("ALTER TABLE site_settings ADD COLUMN venues_hero_subtitle TEXT").run();
-      await env.DB.prepare("ALTER TABLE site_settings ADD COLUMN ccas_hero_image TEXT").run();
-      await env.DB.prepare("ALTER TABLE site_settings ADD COLUMN ccas_hero_title TEXT").run();
-      await env.DB.prepare("ALTER TABLE site_settings ADD COLUMN ccas_hero_subtitle TEXT").run();
-      await env.DB.prepare("ALTER TABLE site_settings ADD COLUMN notice_hero_image TEXT").run();
-      await env.DB.prepare("ALTER TABLE site_settings ADD COLUMN notice_hero_title TEXT").run();
-      await env.DB.prepare("ALTER TABLE site_settings ADD COLUMN notice_hero_subtitle TEXT").run();
-    } catch (e: any) {
-      // Columns probably already exist; ignore error
+    const columnsToAdd = [
+      "venues_hero_image", "venues_hero_title", "venues_hero_subtitle",
+      "ccas_hero_image", "ccas_hero_title", "ccas_hero_subtitle",
+      "notice_hero_image", "notice_hero_title", "notice_hero_subtitle"
+    ];
+    for (const col of columnsToAdd) {
+      try {
+        await env.DB.prepare(`ALTER TABLE site_settings ADD COLUMN ${col} TEXT`).run();
+      } catch (e) {
+        // Ignore if already exists
+      }
     }
 
     const body = await request.json();
