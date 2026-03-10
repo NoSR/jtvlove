@@ -17,7 +17,29 @@ export const onRequestGet = async (context: { env: Env }) => {
   }
 
   try {
-    // 1. Ensure columns exist before reading (for simple automatic migrations)
+    // 1. Ensure table exists first
+    try {
+      await env.DB.prepare(`
+        CREATE TABLE IF NOT EXISTS site_settings (
+          id TEXT PRIMARY KEY,
+          site_name TEXT,
+          admin_phone TEXT,
+          admin_email TEXT,
+          admin_sns TEXT,
+          hq_address TEXT,
+          logo_url TEXT,
+          favicon_url TEXT,
+          venues_hero_image TEXT,
+          venues_hero_title TEXT,
+          venues_hero_subtitle TEXT,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `).run();
+    } catch (e) {
+      // Ignore if exists or error
+    }
+
+    // 2. Add any newly introduced columns
     try {
       const { results: columns } = await env.DB.prepare("PRAGMA table_info(site_settings)").all();
       if (columns && columns.length > 0) {
@@ -65,7 +87,29 @@ export const onRequestPost = async (context: { env: Env, request: Request }) => 
   }
 
   try {
-    // 1. Ensure columns exist before saving
+    // 1. Ensure table exists first
+    try {
+      await env.DB.prepare(`
+        CREATE TABLE IF NOT EXISTS site_settings (
+          id TEXT PRIMARY KEY,
+          site_name TEXT,
+          admin_phone TEXT,
+          admin_email TEXT,
+          admin_sns TEXT,
+          hq_address TEXT,
+          logo_url TEXT,
+          favicon_url TEXT,
+          venues_hero_image TEXT,
+          venues_hero_title TEXT,
+          venues_hero_subtitle TEXT,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `).run();
+    } catch (e) {
+      // Ignore if exists or error
+    }
+
+    // 2. Add any newly introduced columns
     try {
       const { results: columns } = await env.DB.prepare("PRAGMA table_info(site_settings)").all();
       if (columns && columns.length > 0) {
