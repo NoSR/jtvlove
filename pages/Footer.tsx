@@ -1,7 +1,18 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { apiService } from '../services/apiService';
 
 const Footer: React.FC = () => {
+    const [settings, setSettings] = useState<any>(null);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            const data = await apiService.getSiteSettings();
+            setSettings(data);
+        };
+        fetchSettings();
+    }, []);
+
     return (
         <footer className="bg-[#1a1608] text-white pt-16 pb-24 md:pb-12 border-t border-primary/10">
             <div className="max-w-7xl mx-auto px-6">
@@ -10,17 +21,25 @@ const Footer: React.FC = () => {
                     {/* Brand */}
                     <div className="md:col-span-1">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-[#1b180d]">
-                                <span className="material-symbols-outlined fill-1">stars</span>
-                            </div>
+                            {settings?.logo_url ? (
+                                <img src={settings.logo_url} alt="Logo" className="w-10 h-10 object-contain rounded-xl" />
+                            ) : (
+                                <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-[#1b180d]">
+                                    <span className="material-symbols-outlined fill-1">stars</span>
+                                </div>
+                            )}
                             <div>
                                 <h3 className="font-extrabold text-sm uppercase tracking-tight leading-none">
-                                    필리핀<br /><span className="text-primary">JTV 협회</span>
+                                    {settings?.site_name ? (
+                                        <span className="whitespace-pre-line">{settings.site_name}</span>
+                                    ) : (
+                                        <>필리핀<br /><span className="text-primary">JTV 협회</span></>
+                                    )}
                                 </h3>
                             </div>
                         </div>
                         <p className="text-sm text-slate-400 leading-relaxed mt-4">
-                            필리핀 JTV 업소 인증 및 CCA 관리 협회.<br />
+                            {settings?.site_name ? `${settings.site_name} 공식 커뮤니티 플랫폼입니다.` : '필리핀 JTV 업소 인증 및 CCA 관리 협회.'}<br />
                             안전하고 검증된 나이트라이프를 위한 공식 플랫폼입니다.
                         </p>
                     </div>
@@ -66,7 +85,7 @@ const Footer: React.FC = () => {
                 <div className="border-t border-white/5 pt-8">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                         <p className="text-xs text-slate-500">
-                            © 2026 Philippine JTV Association. All rights reserved.
+                            © 2026 {settings?.site_name || 'Philippine JTV Association'}. All rights reserved.
                         </p>
                         <p className="text-[10px] text-slate-600 uppercase tracking-widest">
                             Powered by JTV LOVE Platform
