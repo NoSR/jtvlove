@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { apiService } from '../services/apiService';
 import { CCA, Venue, HeroSection } from '../types';
+import { Helmet } from 'react-helmet-async';
 
 const GRADE_COLORS: Record<string, string> = {
   ACE: 'bg-gradient-to-r from-amber-400 to-yellow-300 text-[#1b180d]',
@@ -107,6 +108,12 @@ const Home: React.FC = () => {
 
   return (
     <div className="animate-fade-in overflow-x-hidden">
+      <Helmet>
+        <title>{settings?.site_name || 'Philippine JTV Association'}</title>
+        <meta name="description" content="필리핀 JTV 최신 정보, 업소 리뷰, CCA 평점 및 커뮤니티! 필리핀 여행의 밤을 책임지는 JTV LOVE에서 모든 것을 확인하세요." />
+        <meta property="og:title" content={settings?.site_name || 'Philippine JTV Association'} />
+        <meta property="og:description" content="필리핀 JTV 최신 정보, 업소 리뷰, CCA 평점 및 커뮤니티! 필리핀 여행의 밤을 책임지는 JTV LOVE에서 모든 것을 확인하세요." />
+      </Helmet>
       {/* ═══════════════════════════════════════════════ */}
       {/* HERO SECTION - Full-screen immersive design    */}
       {/* ═══════════════════════════════════════════════ */}

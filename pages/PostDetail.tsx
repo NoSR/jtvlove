@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/apiService';
 import { Post } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { Helmet } from 'react-helmet-async';
 
 const PostDetail: React.FC = () => {
    const { id } = useParams();
@@ -235,6 +236,13 @@ const PostDetail: React.FC = () => {
 
    return (
       <div className="min-h-screen bg-background-light dark:bg-background-dark pb-32">
+         <Helmet>
+            <title>{post.title} - 커뮤니티</title>
+            <meta name="description" content={post.content.substring(0, 150)} />
+            <meta property="og:title" content={`${post.title} - 커뮤니티`} />
+            <meta property="og:description" content={post.content.substring(0, 150)} />
+            {post.image && <meta property="og:image" content={post.image} />}
+         </Helmet>
          <div className="max-w-4xl mx-auto w-full px-4 pt-12">
             {/* Header & Meta */}
             <div className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b-2 border-zinc-900 dark:border-white pb-8">

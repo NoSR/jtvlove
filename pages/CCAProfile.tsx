@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/apiService';
 import { CCA, MediaItem } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { Helmet } from 'react-helmet-async';
 
 const ZODIAC_SIGNS = [
   { en: 'Aries', ko: '양자리', start: '03-21', end: '04-19' },
@@ -237,6 +238,14 @@ const CCAProfile: React.FC = () => {
 
   return (
     <div className="bg-background-light dark:bg-background-dark min-h-screen pb-24 md:pb-20">
+      <Helmet>
+        <title>{cca.nickname || cca.name} ({cca.venueName}) - 프로필</title>
+        <meta name="description" content={`${cca.nickname || cca.name}의 상세 프로필과 갤러리를 확인하세요.`} />
+        <meta property="og:title" content={`${cca.nickname || cca.name} (${cca.venueName}) - 프로필`} />
+        <meta property="og:description" content={`${cca.nickname || cca.name}의 상세 프로필과 갤러리를 확인하세요.`} />
+        {cca.image && <meta property="og:image" content={cca.image} />}
+        {cca.image && <meta name="twitter:image" content={cca.image} />}
+      </Helmet>
       {/* Mobile-only sticky header */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-primary/10 px-4 py-3 flex items-center justify-between">
         <button onClick={() => navigate(-1)} className="size-10 flex items-center justify-center rounded-full hover:bg-primary/10 transition-colors">

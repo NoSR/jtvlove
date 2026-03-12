@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { apiService } from '../services/apiService';
 import { Venue, CCA } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { Helmet } from 'react-helmet-async';
 
 const VenueDetail: React.FC = () => {
    const { id } = useParams();
@@ -172,6 +173,14 @@ const VenueDetail: React.FC = () => {
 
    return (
       <div className="bg-background-light dark:bg-background-dark min-h-screen pb-32 animate-fade-in">
+         <Helmet>
+            <title>{venue.name} - 필리핀 JTV 협회</title>
+            <meta name="description" content={`${venue.name} (${venue.region}) 상세 정보, 평점 및 예약.`} />
+            <meta property="og:title" content={`${venue.name} - 필리핀 JTV 협회`} />
+            <meta property="og:description" content={`${venue.name} (${venue.region}) 상세 정보, 평점 및 예약.`} />
+            {venue.image && <meta property="og:image" content={venue.image} />}
+            {venue.image && <meta name="twitter:image" content={venue.image} />}
+         </Helmet>
          {/* Hero Banner Section */}
          <div className="relative h-[300px] md:h-[450px] w-full bg-zinc-900 overflow-hidden">
             {venue.banner_image || venue.bannerImage ? (
