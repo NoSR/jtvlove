@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://jtvlove.com/sitemap.xml
+Sitemap: https://jtvstar.com/sitemap.xml

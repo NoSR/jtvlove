@@ -87,7 +87,7 @@ const VenueAdminRegister: React.FC = () => {
                                         required
                                         value={formData.email}
                                         onChange={handleChange}
-                                        placeholder="partner@jtvlove.com"
+                                        placeholder="partner@jtvstar.com"
                                         className="w-full bg-zinc-50 dark:bg-zinc-800 border-zinc-100 dark:border-transparent rounded-2xl py-3.5 px-6 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all"
                                     />
                                 </div>
