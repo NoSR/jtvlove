@@ -32,7 +32,6 @@ import CCAMySchedule from './pages/cca/CCAMySchedule';
 import CCAGalleryManager from './pages/cca/CCAGalleryManager';
 import CCAProfileSettings from './pages/cca/CCAProfileSettings';
 import CCALogin from './pages/cca/CCALogin';
-import CCASelectorModal from './pages/cca/CCASelectorModal';
 
 // Super Admin Pages
 import SuperAdminLayout from './pages/super/SuperAdminLayout';
@@ -60,7 +59,6 @@ const Navigation = () => {
   const [boards, setBoards] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>(null);
   const [showVenueSelector, setShowVenueSelector] = useState(false);
-  const [showCCASelector, setShowCCASelector] = useState(false);
 
   const handleVenueSelect = (venueId: string) => {
     updateUser({ venueId });
@@ -68,23 +66,10 @@ const Navigation = () => {
     navigate('/admin');
   };
 
-  const handleCCASelect = (ccaId: string) => {
-    updateUser({ ccaId });
-    setShowCCASelector(false);
-    navigate('/cca-portal');
-  };
-
   const handleOwnerClick = (e: React.MouseEvent) => {
     if (user?.role === 'super_admin') {
       e.preventDefault();
       setShowVenueSelector(true);
-    }
-  };
-
-  const handleCCAClick = (e: React.MouseEvent) => {
-    if (user?.role === 'super_admin') {
-      e.preventDefault();
-      setShowCCASelector(true);
     }
   };
 
@@ -215,7 +200,7 @@ const Navigation = () => {
             <Link to="/mypage" className={`text-sm font-bold transition-colors ${isActive('/mypage') ? 'text-primary' : 'hover:text-primary'}`}>마이페이지</Link>
             <div className="flex gap-2">
               <Link to="/admin/login" onClick={handleOwnerClick} className="text-[10px] font-black bg-zinc-100 dark:bg-white/5 px-3 py-1 rounded-full uppercase">업주용</Link>
-              <Link to="/cca-portal/login" onClick={handleCCAClick} className="text-[10px] font-black bg-primary/10 text-primary px-3 py-1 rounded-full uppercase tracking-tighter">CCA 전용</Link>
+              <Link to="/cca-portal/login" className="text-[10px] font-black bg-primary/10 text-primary px-3 py-1 rounded-full uppercase tracking-tighter">CCA 전용</Link>
               <Link to="/super-admin" className="text-[10px] font-black bg-red-500/10 text-red-600 px-3 py-1 rounded-full uppercase">관리자</Link>
             </div>
 
@@ -290,11 +275,6 @@ const Navigation = () => {
         isOpen={showVenueSelector}
         onClose={() => setShowVenueSelector(false)}
         onSelect={handleVenueSelect}
-      />
-      <CCASelectorModal
-        isOpen={showCCASelector}
-        onClose={() => setShowCCASelector(false)}
-        onSelect={handleCCASelect}
       />
     </>
   );
