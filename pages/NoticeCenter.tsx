@@ -138,7 +138,7 @@ const NoticeCenter: React.FC = () => {
                                         {currentPosts.map((post, index) => (
                                             <tr 
                                                 key={post.id} 
-                                                onClick={() => navigate(`/community?board=${post.board}&id=${post.id}`)}
+                                                onClick={() => navigate(`/community/post/${post.id}`)}
                                                 className="group cursor-pointer hover:bg-primary/5 transition-colors border-b border-gray-50 dark:border-white/5 last:border-0"
                                             >
                                                 <td className="py-6 px-8 text-center">
