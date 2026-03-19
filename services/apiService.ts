@@ -1439,7 +1439,26 @@ export const apiService = {
       console.error('toggleCCALike error:', error);
       return { liked: false, count: 0 };
     }
+  },
+
+  // ═══════════════════════════════════════════
+  // Super Admin Dashboard
+  // ═══════════════════════════════════════════
+  async getSuperDashboardStats(): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE}/super/dashboard`);
+      if (!response.ok) throw new Error('Failed to fetch dashboard stats');
+      return await response.json();
+    } catch (error) {
+      console.error('getSuperDashboardStats error:', error);
+      return {
+        venuesCount: 0, venuesToday: 0,
+        ccasCount: 0, ccasToday: 0,
+        usersCount: 0, usersToday: 0,
+        reservationsCount: 0, reservationsToday: 0,
+        recentPosts: [], recentUsers: []
+      };
+    }
   }
 };
-
 
