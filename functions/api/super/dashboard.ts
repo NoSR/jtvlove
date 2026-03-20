@@ -26,64 +26,63 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
 
         // 1. Venues stats
         try {
-            const venuesRes = await env.DB.prepare("SELECT COUNT(*) as count FROM venues").first();
-            const pendingVenuesRes = await env.DB.prepare("SELECT COUNT(*) as count FROM venues WHERE created_at LIKE ?").bind(`${todayStr}%`).first();
-            stats.venuesCount = venuesRes?.count || 0;
-            stats.venuesToday = pendingVenuesRes?.count || 0;
-        } catch (e: any) {
-            console.error("Super Dashboard Venues Error:", e.message);
-        }
+            const res = await env.DB.prepare("SELECT COUNT(*) as count FROM venues").first();
+            stats.venuesCount = res?.count || 0;
+        } catch (e: any) { console.error("Venues Total Error:", e.message); }
+        
+        try {
+            const res = await env.DB.prepare("SELECT COUNT(*) as count FROM venues WHERE created_at LIKE ?").bind(`${todayStr}%`).first();
+            stats.venuesToday = res?.count || 0;
+        } catch (e: any) { console.error("Venues Today Error:", e.message); }
 
         // 2. CCAs stats
         try {
-            const ccasRes = await env.DB.prepare("SELECT COUNT(*) as count FROM ccas WHERE COALESCE(status, 'active') != 'DELETED'").first();
-            const pendingCcasRes = await env.DB.prepare("SELECT COUNT(*) as count FROM ccas WHERE COALESCE(status, 'active') != 'DELETED' AND created_at LIKE ?").bind(`${todayStr}%`).first();
-            stats.ccasCount = ccasRes?.count || 0;
-            stats.ccasToday = pendingCcasRes?.count || 0;
-        } catch (e: any) {
-            console.error("Super Dashboard CCAs Error:", e.message);
-        }
+            const res = await env.DB.prepare("SELECT COUNT(*) as count FROM ccas WHERE COALESCE(status, 'active') != 'DELETED'").first();
+            stats.ccasCount = res?.count || 0;
+        } catch (e: any) { console.error("CCAs Total Error:", e.message); }
+
+        try {
+            const res = await env.DB.prepare("SELECT COUNT(*) as count FROM ccas WHERE COALESCE(status, 'active') != 'DELETED' AND created_at LIKE ?").bind(`${todayStr}%`).first();
+            stats.ccasToday = res?.count || 0;
+        } catch (e: any) { console.error("CCAs Today Error:", e.message); }
 
         // 3. CCAs Active users/signups
         try {
-            const usersRes = await env.DB.prepare("SELECT COUNT(*) as count FROM users WHERE COALESCE(status, 'active') != 'DELETED'").first();
-            // Since we don't have last_login logic reliably set in all places, we will query today's signups
-            const activeUsersRes = await env.DB.prepare("SELECT COUNT(*) as count FROM users WHERE COALESCE(status, 'active') != 'DELETED' AND created_at LIKE ?").bind(`${todayStr}%`).first();
-            stats.usersCount = usersRes?.count || 0;
-            stats.usersToday = activeUsersRes?.count || 0;
-        } catch (e: any) {
-            console.error("Super Dashboard Users Error:", e.message);
-        }
+            const res = await env.DB.prepare("SELECT COUNT(*) as count FROM users WHERE COALESCE(status, 'active') != 'DELETED'").first();
+            stats.usersCount = res?.count || 0;
+        } catch (e: any) { console.error("Users Total Error:", e.message); }
+
+        try {
+            const res = await env.DB.prepare("SELECT COUNT(*) as count FROM users WHERE COALESCE(status, 'active') != 'DELETED' AND created_at LIKE ?").bind(`${todayStr}%`).first();
+            stats.usersToday = res?.count || 0;
+        } catch (e: any) { console.error("Users Today Error:", e.message); }
 
         // 4. Reservations / Booking Activity
         try {
-            const reservationsRes = await env.DB.prepare("SELECT COUNT(*) as count FROM reservations").first();
-            const todayReservationsRes = await env.DB.prepare("SELECT COUNT(*) as count FROM reservations WHERE created_at LIKE ?").bind(`${todayStr}%`).first();
-            stats.reservationsCount = reservationsRes?.count || 0;
-            stats.reservationsToday = todayReservationsRes?.count || 0;
-        } catch (e: any) {
-            console.error("Super Dashboard Reservations Error:", e.message);
-        }
+            const res = await env.DB.prepare("SELECT COUNT(*) as count FROM reservations").first();
+            stats.reservationsCount = res?.count || 0;
+        } catch (e: any) { console.error("Reservations Total Error:", e.message); }
+
+        try {
+            const res = await env.DB.prepare("SELECT COUNT(*) as count FROM reservations WHERE created_at LIKE ?").bind(`${todayStr}%`).first();
+            stats.reservationsToday = res?.count || 0;
+        } catch (e: any) { console.error("Reservations Today Error:", e.message); }
 
         // 5. Recent Posts (max 6)
         try {
-            const { results: recentPosts } = await env.DB.prepare(
+            const res = await env.DB.prepare(
                 "SELECT id, board, title, created_at, views, likes FROM posts ORDER BY created_at DESC LIMIT 6"
             ).all();
-            stats.recentPosts = recentPosts || [];
-        } catch (e: any) {
-            console.error("Super Dashboard Recent Posts Error:", e.message);
-        }
+            stats.recentPosts = res?.results || [];
+        } catch (e: any) { console.error("Recent Posts Error:", e.message); }
 
         // 6. System Health / recent signups (max 5)
         try {
-            const { results: recentUsers } = await env.DB.prepare(
+            const res = await env.DB.prepare(
                 "SELECT nickname as name, created_at FROM users WHERE COALESCE(status, 'active') != 'DELETED' ORDER BY created_at DESC LIMIT 5"
             ).all();
-            stats.recentUsers = recentUsers || [];
-        } catch (e: any) {
-            console.error("Super Dashboard Recent Users Error:", e.message);
-        }
+            stats.recentUsers = res?.results || [];
+        } catch (e: any) { console.error("Recent Users Error:", e.message); }
 
         return new Response(JSON.stringify({
             ...stats,
