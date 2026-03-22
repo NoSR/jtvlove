@@ -126,7 +126,26 @@ export const onRequest: any = async (context: any) => {
           LEFT JOIN venues v ON c.venue_id = v.id
           ORDER BY c.created_at DESC
         `;
-                const { results } = await env.DB.prepare(query).bind(today).all();
+                let results: any[] = [];
+                try {
+                    const dbResult = await env.DB.prepare(query).bind(today).all();
+                    results = dbResult.results || [];
+                } catch (dbErr: any) {
+                    console.error("DB Query Error in listCCAs:", dbErr);
+                    // Fallback to query without created_at if created_at column is missing
+                    if (dbErr.message && dbErr.message.includes("column")) {
+                        const fallbackQuery = `
+                            SELECT c.*, v.name as venue_name, v.name as venueName, v.region as region,
+                            (SELECT COUNT(*) FROM reservations r WHERE r.cca_id = c.id AND r.reservation_date = ?) as today_reservations
+                            FROM ccas c 
+                            LEFT JOIN venues v ON c.venue_id = v.id
+                        `;
+                        const fbResult = await env.DB.prepare(fallbackQuery).bind(today).all();
+                        results = fbResult.results || [];
+                    } else {
+                        throw dbErr;
+                    }
+                }
 
                 const formatted = results.map((c: any) => {
                     let specialties = [];
@@ -146,7 +165,7 @@ export const onRequest: any = async (context: any) => {
                     };
                 });
 
-                return new Response(JSON.stringify(formatted || []), {
+                return new Response(JSON.stringify(formatted), {
                     headers: { "Content-Type": "application/json" },
                 });
             }
