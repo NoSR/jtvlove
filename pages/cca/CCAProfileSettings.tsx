@@ -438,38 +438,7 @@ const CCAProfileSettings: React.FC = () => {
             </div>
           </div>
 
-          {/* SNS Links Card */}
-          <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-primary/5 shadow-sm space-y-8">
-            <div className="flex items-center gap-4">
-              <div className="size-12 bg-blue-500/10 text-blue-500 rounded-2xl flex items-center justify-center">
-                <span className="material-symbols-outlined">share</span>
-              </div>
-              <h3 className="text-xl font-black tracking-tight">Social Connect</h3>
-            </div>
 
-            <div className="space-y-4">
-              {[
-                { id: 'instagram', label: 'Instagram' },
-                { id: 'facebook', label: 'Facebook' },
-                { id: 'tiktok', label: 'TikTok' },
-                { id: 'twitter', label: 'X (Twitter)' },
-                { id: 'threads', label: 'Threads' },
-                { id: 'telegram', label: 'Telegram' }
-              ].map(social => (
-                <div key={social.id} className="flex flex-col gap-2 bg-gray-50 dark:bg-white/5 p-4 rounded-2xl border border-transparent focus-within:border-primary/20 transition-all">
-                  <p className="text-[10px] font-black text-black dark:text-white uppercase tracking-widest">{social.label}</p>
-                  <input
-                    type="text"
-                    disabled={!isEditMode}
-                    value={(formData.sns as any)?.[social.id] || ''}
-                    onChange={(e) => handleInputChange(`sns.${social.id}`, e.target.value)}
-                    placeholder={`@username or link`}
-                    className="w-full bg-transparent border-none p-0 text-xs font-bold focus:ring-0 text-gray-600 dark:text-gray-300"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* Right Column: Basic Info & Experience */}

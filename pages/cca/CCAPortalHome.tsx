@@ -227,11 +227,10 @@ const CCAPortalHome: React.FC = () => {
                            </div>
                            <div className="flex-1 min-w-0">
                               <p className="text-sm font-bold">{req.customer_name}</p>
-                              <p className="text-[11px] text-gray-400 font-medium mt-0.5">
+                               <p className="text-[11px] text-gray-400 font-medium mt-0.5">
                                  {req.preferred_date} {req.preferred_time} · {req.group_size}명
                               </p>
                               {req.customer_note && <p className="text-xs text-gray-500 mt-1 italic">'{req.customer_note}'</p>}
-                              {req.customer_contact && <p className="text-[10px] text-gray-400 mt-1">연락처: {req.customer_contact}</p>}
                            </div>
                            <div className="flex gap-2 flex-shrink-0">
                               <button

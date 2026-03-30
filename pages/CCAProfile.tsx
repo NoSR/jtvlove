@@ -293,15 +293,7 @@ const CCAProfile: React.FC = () => {
               </div>
             </div>
 
-            {/* SNS Links */}
-            {cca.sns && Object.values(cca.sns).some(v => v) && (
-              <div className="hidden md:flex flex-wrap gap-3 justify-center">
-                {cca.sns.instagram && <a href={`https://instagram.com/${cca.sns.instagram}`} target="_blank" rel="noopener noreferrer" className="size-10 rounded-xl bg-white dark:bg-zinc-800 flex items-center justify-center border border-primary/10 hover:bg-primary/10 transition-colors"><img src="https://cdn-icons-png.flaticon.com/512/174/174855.png" className="size-5" alt="IG" /></a>}
-                {cca.sns.facebook && <a href={`https://facebook.com/${cca.sns.facebook}`} target="_blank" rel="noopener noreferrer" className="size-10 rounded-xl bg-white dark:bg-zinc-800 flex items-center justify-center border border-primary/10 hover:bg-primary/10 transition-colors"><img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" className="size-5" alt="FB" /></a>}
-                {cca.sns.tiktok && <a href={`https://tiktok.com/@${cca.sns.tiktok}`} target="_blank" rel="noopener noreferrer" className="size-10 rounded-xl bg-white dark:bg-zinc-800 flex items-center justify-center border border-primary/10 hover:bg-primary/10 transition-colors"><img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png" className="size-5" alt="TT" /></a>}
-                {cca.sns.telegram && <a href={`https://t.me/${cca.sns.telegram}`} target="_blank" rel="noopener noreferrer" className="size-10 rounded-xl bg-white dark:bg-zinc-800 flex items-center justify-center border border-primary/10 hover:bg-primary/10 transition-colors"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png" className="size-5" alt="TG" /></a>}
-              </div>
-            )}
+
 
             {/* PC Desktop CTA - FIXED: 문구 변경 + 기능 연결 */}
             <div className="hidden md:block">
@@ -555,15 +547,12 @@ const CCAProfile: React.FC = () => {
                       className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-5 py-4 font-bold text-sm focus:border-primary outline-none transition-all"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">연락처 (카카오/전화/텔레그램)</label>
-                    <input
-                      type="text"
-                      value={requestForm.customerContact}
-                      onChange={(e) => setRequestForm({ ...requestForm, customerContact: e.target.value })}
-                      placeholder="연락 가능한 수단"
-                      className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-5 py-4 font-bold text-sm focus:border-primary outline-none transition-all"
-                    />
+                  <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-start gap-3">
+                     <span className="material-symbols-outlined text-primary text-lg mt-0.5">lock</span>
+                     <div>
+                        <p className="text-sm font-black text-primary uppercase tracking-tighter">Privacy Protected</p>
+                        <p className="text-xs text-gray-500 font-bold mt-1 leading-relaxed">개인 연락처를 요구하지 않습니다. 확정 알림 등 모든 소통은 플랫폼 내 다이렉트 메시지로 안전하게 보호됩니다.</p>
+                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-2">
