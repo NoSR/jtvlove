@@ -1,6 +1,6 @@
 // Latest Fixes: 2026-03-06 22:05 (Inquiry Response Display Fix - redeploy)
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { apiService } from '../services/apiService';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -58,10 +58,7 @@ const MyPage: React.FC = () => {
   const [showAddPointsModal, setShowAddPointsModal] = useState(false);
 
   useEffect(() => {
-    if (!authUser) {
-      navigate('/login');
-      return;
-    }
+    if (!authUser) return;
 
     const fetchUserData = async () => {
       try {
@@ -285,6 +282,10 @@ const MyPage: React.FC = () => {
       setPointLogs(data);
     } catch (err) { console.error(err); }
   };
+
+  if (!authUser) {
+    return <Navigate to="/login" replace />;
+  }
 
   if (loading || !user) return <div className="flex items-center justify-center min-h-[60vh] text-primary animate-pulse font-black uppercase tracking-widest text-xs">Accessing Data...</div>;
 
