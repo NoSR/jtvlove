@@ -529,19 +529,26 @@ const Home: React.FC = () => {
               <>엄선된 프리미엄 업소와 검증된 CCA를 만나보세요.<br className="hidden md:block" />안전하고 만족스러운 경험을 보장합니다.</>
             )}
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center">
+            <Link
+              to="/guide"
+              className="inline-flex px-8 md:px-10 py-4 bg-emerald-500 text-white rounded-2xl font-black hover:bg-emerald-400 hover:shadow-2xl hover:shadow-emerald-500/30 hover:scale-105 transition-all items-center justify-center gap-3 group text-sm md:text-base shadow-xl border border-emerald-400/50"
+            >
+              초보자 가이드북 펼치기
+              <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">menu_book</span>
+            </Link>
             <Link
               to="/ccas"
-              className="inline-flex px-10 py-4 bg-primary text-[#1b180d] rounded-2xl font-black hover:shadow-2xl hover:shadow-primary/30 hover:scale-105 transition-all items-center justify-center gap-3 group text-base shadow-xl"
+              className="inline-flex px-8 md:px-10 py-4 bg-primary text-[#1b180d] rounded-2xl font-black hover:shadow-2xl hover:shadow-primary/30 hover:scale-105 transition-all items-center justify-center gap-3 group text-sm md:text-base shadow-xl"
             >
               {settings?.ui_texts?.home_btn_cca || 'CCA 둘러보기'}
               <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
             </Link>
             <Link
               to="/venues"
-              className="inline-flex px-10 py-4 bg-white dark:bg-white/10 text-zinc-900 dark:text-white rounded-2xl font-black hover:shadow-xl hover:scale-105 transition-all items-center justify-center gap-3 group text-base border border-zinc-200 dark:border-white/10"
+              className="inline-flex px-8 md:px-10 py-4 bg-white dark:bg-white/10 text-zinc-900 dark:text-white rounded-2xl font-black hover:shadow-xl hover:scale-105 transition-all items-center justify-center gap-3 group text-sm md:text-base border border-zinc-200 dark:border-white/10"
             >
-              {settings?.ui_texts?.home_btn_venue || '업소 정보 보기'}
+              {settings?.ui_texts?.home_btn_venue || '업소 정보 찾기'}
               <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">apartment</span>
             </Link>
           </div>

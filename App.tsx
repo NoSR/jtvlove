@@ -16,6 +16,7 @@ import Register from './pages/Register';
 import NoticeCenter from './pages/NoticeCenter';
 import Policy from './pages/Policy';
 import Footer from './pages/Footer';
+import Guidebook from './pages/Guidebook';
 
 
 // Admin & Portal
@@ -143,6 +144,9 @@ const Navigation = () => {
             <Link to="/" className={`text-sm font-bold transition-colors ${isActive('/') ? 'text-primary' : 'hover:text-primary'}`}>홈</Link>
             <Link to="/venues" className={`text-sm font-bold transition-colors ${isActive('/venues') ? 'text-primary' : 'hover:text-primary'}`}>업소 정보</Link>
             <Link to="/ccas" className={`text-sm font-bold transition-colors ${isActive('/ccas') ? 'text-primary' : 'hover:text-primary'}`}>CCA 리스트</Link>
+            <Link to="/guide" className={`text-sm font-bold transition-colors text-emerald-400 hover:text-emerald-300 flex items-center gap-1`}>
+              <span className="material-symbols-outlined text-[14px]">menu_book</span>가이드
+            </Link>
 
             <div className="relative group py-4">
               <Link to="/community" className={`text-sm font-bold transition-colors flex items-center gap-1 ${location.pathname.startsWith('/community') ? 'text-primary' : 'hover:text-primary'}`}>
@@ -306,6 +310,7 @@ const App: React.FC = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/notice" element={<NoticeCenter />} />
           <Route path="/policy" element={<Policy />} />
+          <Route path="/guide" element={<Guidebook />} />
 
           {/* Venue Admin Auth */}
           <Route path="/admin/login" element={<VenueAdminLogin />} />
