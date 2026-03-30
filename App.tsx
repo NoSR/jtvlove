@@ -32,6 +32,8 @@ import CCAMySchedule from './pages/cca/CCAMySchedule';
 import CCAGalleryManager from './pages/cca/CCAGalleryManager';
 import CCAProfileSettings from './pages/cca/CCAProfileSettings';
 import CCALogin from './pages/cca/CCALogin';
+import CCALanding from './pages/cca/CCALanding';
+import CCAApply from './pages/cca/CCAApply';
 
 // Super Admin Pages
 import SuperAdminLayout from './pages/super/SuperAdminLayout';
@@ -319,8 +321,10 @@ const App: React.FC = () => {
           {/* Admin Routes */}
           <Route path="/admin/*" element={<AdminLayoutRoutes />} />
 
-          {/* CCA Portal Auth */}
+          {/* CCA Portal Auth & Onboarding */}
           <Route path="/cca-portal/login" element={<CCALogin />} />
+          <Route path="/cca-portal/welcome" element={<CCALanding />} />
+          <Route path="/cca-portal/apply" element={<CCAApply />} />
 
           {/* CCA Portal Routes */}
           <Route path="/cca-portal/*" element={<CCAPortalLayout><CCAPortalRoutes /></CCAPortalLayout>} />

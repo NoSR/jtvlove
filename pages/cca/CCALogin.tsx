@@ -250,7 +250,12 @@ const CCALogin: React.FC = () => {
                         </form>
                     )}
 
-                    <p className="mt-10 text-center text-[10px] font-black text-zinc-400 uppercase tracking-widest relative z-10">
+                    <p className="mt-10 mb-4 flex items-center justify-center gap-2">
+                        <Link to="/cca-portal/welcome" className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-500/10 text-emerald-500 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500/20 transition-colors border border-emerald-500/20">
+                            JTV STAR 파트너로 합류하기 <span className="material-symbols-outlined text-[12px] animate-pulse">stars</span>
+                        </Link>
+                    </p>
+                    <p className="text-center text-[10px] font-black text-zinc-400 uppercase tracking-widest relative z-10">
                         Need assistance? <Link to="/notice?type=FAQ" className="text-primary hover:underline">Contact Support</Link>
                     </p>
                 </div>

@@ -55,6 +55,7 @@ const Footer: React.FC = () => {
                             <li><Link to="/venues" className="text-sm text-slate-400 hover:text-primary transition-colors flex items-center gap-2"><span className="material-symbols-outlined text-sm">apartment</span>업소 정보</Link></li>
                             <li><Link to="/ccas" className="text-sm text-slate-400 hover:text-primary transition-colors flex items-center gap-2"><span className="material-symbols-outlined text-sm">groups</span>CCA 리스트</Link></li>
                             <li><Link to="/community" className="text-sm text-slate-400 hover:text-primary transition-colors flex items-center gap-2"><span className="material-symbols-outlined text-sm">forum</span>커뮤니티</Link></li>
+                            <li><Link to="/cca-portal/welcome" className="text-sm text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-2"><span className="material-symbols-outlined text-sm">handshake</span>CCA 파트너 가입</Link></li>
                             <li><Link to="/notice" className="text-sm text-slate-400 hover:text-primary transition-colors flex items-center gap-2"><span className="material-symbols-outlined text-sm">campaign</span>공지사항</Link></li>
                         </ul>
                     </div>
