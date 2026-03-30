@@ -1,23 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
+import { apiService } from '../../services/apiService';
+import { Venue } from '../../types';
 
 const CCAApply: React.FC = () => {
     const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [venues, setVenues] = useState<Venue[]>([]);
+
+    useEffect(() => {
+        const fetchVenues = async () => {
+            try {
+                const data = await apiService.getVenues();
+                setVenues(data);
+            } catch (error) {
+                console.error("Failed to load venues", error);
+            }
+        };
+        fetchVenues();
+    }, []);
 
     // Form State
     const [formData, setFormData] = useState({
+        // 필수 및 기본 정보
+        realName: '',
         nickname: '',
         age: '',
-        height: '',
+        phone: '',
+        bodySize: '', // 신체 사이즈
+        
+        // 상세 및 매력 포인트
         languages: [] as string[],
         experience: '',
         introduction: '',
-        venuePreference: 'any',
-        photo: null as File | null
+        
+        // 사진
+        photo: null as File | null,
+        photoPreview: '',
+        
+        // 근무/취업 상태 옵션
+        venueOption: 'registered' as 'registered' | 'unregistered' | 'unemployed',
+        registeredVenueId: '',
+        unregisteredVenueName: ''
     });
 
     const handleNext = (e: React.FormEvent) => {
@@ -41,6 +68,17 @@ const CCAApply: React.FC = () => {
                 ? prev.languages.filter(l => l !== lang)
                 : [...prev.languages, lang]
         }));
+    };
+
+    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFormData(prev => ({ ...prev, photo: file, photoPreview: reader.result as string }));
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -74,6 +112,14 @@ const CCAApply: React.FC = () => {
         );
     }
 
+    // Step Validation for the 'Next' button
+    const isStep1Valid = formData.realName.trim() !== '' && formData.age.trim() !== '' && formData.phone.trim() !== '' && formData.bodySize.trim() !== '';
+    const isStep3Valid = formData.photoPreview !== '';
+    const isStep4Valid = 
+        (formData.venueOption === 'registered' && formData.registeredVenueId !== '') ||
+        (formData.venueOption === 'unregistered' && formData.unregisteredVenueName.trim() !== '') ||
+        formData.venueOption === 'unemployed';
+
     return (
         <div className="min-h-screen bg-[#faf9f6] dark:bg-zinc-950 font-display flex flex-col items-center justify-center p-4 sm:p-8">
             <Helmet>
@@ -95,7 +141,7 @@ const CCAApply: React.FC = () => {
                         <div className="flex justify-between mb-4">
                             <span className="text-[10px] font-black uppercase tracking-widest text-primary">Step {step} of 4</span>
                             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
-                                {step === 1 ? '기본 정보' : step === 2 ? '상세 프로필' : step === 3 ? '사진 등록' : '근무 희망지'}
+                                {step === 1 ? '필수 기본 정보' : step === 2 ? '상세 이력' : step === 3 ? '프로필 사진' : '취업 및 소속 상태'}
                             </span>
                         </div>
                         <div className="flex gap-2">
@@ -112,42 +158,69 @@ const CCAApply: React.FC = () => {
                             <div className="space-y-6 animate-fade-in flex-1">
                                 <h2 className="text-3xl font-extrabold mb-8 tracking-tight">기본 정보 입력 <span className="text-primary text-4xl leading-none">.</span></h2>
                                 
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-4">활동할 닉네임</label>
-                                    <input 
-                                        type="text" 
-                                        name="nickname" 
-                                        required 
-                                        value={formData.nickname} 
-                                        onChange={handleChange}
-                                        placeholder="홍보에 사용될 이름" 
-                                        className="w-full bg-zinc-50 dark:bg-zinc-800 border-zinc-100 dark:border-transparent rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-4">출생 년도 (Age)</label>
+                                        <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-4">본명 (실명) <span className="text-red-500">*</span></label>
                                         <input 
-                                            type="number" 
-                                            name="age" 
-                                            min="1990" 
-                                            max="2005"
+                                            type="text" 
+                                            name="realName" 
                                             required 
-                                            value={formData.age} 
+                                            value={formData.realName} 
                                             onChange={handleChange}
-                                            placeholder="예: 2001" 
+                                            placeholder="홍길동" 
                                             className="w-full bg-zinc-50 dark:bg-zinc-800 border-zinc-100 dark:border-transparent rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-4">키 (Height cm)</label>
+                                        <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-4">활동 닉네임</label>
+                                        <input 
+                                            type="text" 
+                                            name="nickname" 
+                                            value={formData.nickname} 
+                                            onChange={handleChange}
+                                            placeholder="사이트에 노출될 이름" 
+                                            className="w-full bg-zinc-50 dark:bg-zinc-800 border-zinc-100 dark:border-transparent rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-4">연락처 (핸드폰) <span className="text-red-500">*</span></label>
+                                    <input 
+                                        type="tel" 
+                                        name="phone" 
+                                        required 
+                                        value={formData.phone} 
+                                        onChange={handleChange}
+                                        placeholder="010-1234-5678" 
+                                        className="w-full bg-zinc-50 dark:bg-zinc-800 border-zinc-100 dark:border-transparent rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-4">나이 (Age) <span className="text-red-500">*</span></label>
                                         <input 
                                             type="number" 
-                                            name="height" 
+                                            name="age" 
+                                            min="18" 
+                                            max="50"
                                             required 
-                                            value={formData.height} 
+                                            value={formData.age} 
                                             onChange={handleChange}
-                                            placeholder="예: 165" 
+                                            placeholder="만 나이 입력" 
+                                            className="w-full bg-zinc-50 dark:bg-zinc-800 border-zinc-100 dark:border-transparent rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-4">신체 사이즈 <span className="text-red-500">*</span></label>
+                                        <input 
+                                            type="text" 
+                                            name="bodySize" 
+                                            required 
+                                            value={formData.bodySize} 
+                                            onChange={handleChange}
+                                            placeholder="예: 165cm / 44사이즈" 
                                             className="w-full bg-zinc-50 dark:bg-zinc-800 border-zinc-100 dark:border-transparent rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                                         />
                                     </div>
@@ -161,7 +234,7 @@ const CCAApply: React.FC = () => {
                                 <h2 className="text-3xl font-extrabold mb-8 tracking-tight">상세 프로필 <span className="text-primary text-4xl leading-none">.</span></h2>
                                 
                                 <div className="space-y-4">
-                                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-4">가능한 언어 (다중 선택)</label>
+                                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-4">구사 가능한 언어 (다중 선택)</label>
                                     <div className="flex flex-wrap gap-3">
                                         {['한국어', '영어', '일본어', '따갈로그'].map(lang => (
                                             <button
@@ -176,7 +249,7 @@ const CCAApply: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="space-y-2 mt-4">
-                                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-4">근무 경력</label>
+                                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-4">근무 경력 확인</label>
                                     <select 
                                         name="experience"
                                         value={formData.experience}
@@ -198,7 +271,7 @@ const CCAApply: React.FC = () => {
                                         required 
                                         value={formData.introduction} 
                                         onChange={handleChange}
-                                        placeholder="고객들에게 어필할 나만의 장점을 적어주세요!" 
+                                        placeholder="고객들에게 어필할 나만의 매력과 장점을 적어주세요!" 
                                         className="w-full bg-zinc-50 dark:bg-zinc-800 border-zinc-100 dark:border-transparent rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all outline-none resize-none h-24"
                                     ></textarea>
                                 </div>
@@ -208,65 +281,115 @@ const CCAApply: React.FC = () => {
                         {/* STEP 3: Photo Upload */}
                         {step === 3 && (
                             <div className="space-y-6 animate-fade-in flex-1">
-                                <h2 className="text-3xl font-extrabold mb-8 tracking-tight">메인 사진 등록 <span className="text-primary text-4xl leading-none">.</span></h2>
+                                <h2 className="text-3xl font-extrabold mb-8 tracking-tight">얼굴 프로필 사진 <span className="text-red-500">*</span><span className="text-primary text-4xl leading-none">.</span></h2>
                                 
-                                <div className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-[2rem] p-10 flex flex-col items-center justify-center text-center hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer group h-64">
-                                    <div className="size-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
-                                        <span className="material-symbols-outlined text-3xl">add_a_photo</span>
-                                    </div>
-                                    <p className="font-bold text-lg mb-2">얼굴이 잘 나온 사진을 올려주세요</p>
-                                    <p className="text-xs text-zinc-400 font-medium">최대 5MB, JPG/PNG 지원</p>
-                                    <input type="file" className="hidden" accept="image/*" />
-                                </div>
-                                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest text-center mt-4">* 제출 후 관리자 승인을 거치게 됩니다.</p>
+                                <label className="block border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-[2rem] p-1 overflow-hidden flex flex-col items-center justify-center text-center hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer group h-64 relative">
+                                    <input type="file" className="hidden" accept="image/*" onChange={handlePhotoChange} />
+                                    
+                                    {formData.photoPreview ? (
+                                        <img src={formData.photoPreview} alt="Preview" className="w-full h-full object-cover rounded-[1.8rem]" />
+                                    ) : (
+                                        <div className="p-8">
+                                            <div className="size-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mx-auto mb-4 group-hover:scale-110 transition-transform">
+                                                <span className="material-symbols-outlined text-3xl">add_a_photo</span>
+                                            </div>
+                                            <p className="font-bold text-lg mb-2">본인을 잘 나타내는 사진 선택</p>
+                                            <p className="text-xs text-zinc-400 font-medium">최대 5MB, JPG/PNG 지원</p>
+                                        </div>
+                                    )}
+                                    {formData.photoPreview && (
+                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-[1.8rem]">
+                                            <span className="text-white font-bold bg-black/40 px-4 py-2 rounded-xl backdrop-blur-sm">사진 변경하기</span>
+                                        </div>
+                                    )}
+                                </label>
+                                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest text-center mt-4">제출하신 사진은 사이트 내 본인 프로필의 메인 화면에 반영됩니다.</p>
                             </div>
                         )}
 
-                        {/* STEP 4: Venue Preference */}
+                        {/* STEP 4: Employment & Venue Status */}
                         {step === 4 && (
                             <div className="space-y-6 animate-fade-in flex-1">
-                                <h2 className="text-3xl font-extrabold mb-8 tracking-tight">근무 희망지 <span className="text-primary text-4xl leading-none">.</span></h2>
+                                <h2 className="text-3xl font-extrabold mb-8 tracking-tight">취업 및 소속 상태 <span className="text-red-500">*</span><span className="text-primary text-4xl leading-none">.</span></h2>
                                 
-                                <div className="grid grid-cols-1 gap-4">
-                                    <label className={`cursor-pointer border-2 rounded-2xl p-6 transition-all ${formData.venuePreference === 'any' ? 'border-primary bg-primary/5 shadow-xl shadow-primary/10' : 'border-zinc-200 dark:border-zinc-800 hover:border-primary/30'}`}>
-                                        <div className="flex items-center gap-4">
+                                <div className="space-y-4">
+                                    {/* Option 1: Registered Venue */}
+                                    <label className={`block cursor-pointer border-2 rounded-2xl p-5 transition-all ${formData.venueOption === 'registered' ? 'border-primary bg-primary/5 shadow-xl shadow-primary/10' : 'border-zinc-200 dark:border-zinc-800 hover:border-primary/30'}`}>
+                                        <div className="flex items-start gap-4">
                                             <input 
                                                 type="radio" 
-                                                name="venuePreference" 
-                                                value="any" 
-                                                checked={formData.venuePreference === 'any'}
+                                                name="venueOption" 
+                                                value="registered" 
+                                                checked={formData.venueOption === 'registered'}
                                                 onChange={handleChange}
-                                                className="w-5 h-5 accent-primary" 
+                                                className="w-5 h-5 accent-primary mt-1 flex-shrink-0" 
                                             />
-                                            <div>
-                                                <p className="font-black text-lg">전체 인재풀 등록 (추천)</p>
-                                                <p className="text-xs text-zinc-500 font-medium mt-1">JTV STAR의 모든 제휴 업소가 나의 프로필을 보고 스카웃(면접)을 제안할 수 있습니다.</p>
+                                            <div className="flex-1 w-full">
+                                                <p className="font-black text-lg text-zinc-900 dark:text-white">JTV STAR 등록 업체 근무 중</p>
+                                                <p className="text-xs text-zinc-500 font-medium mt-1 mb-3">현재 사이트에 등록되어 관리 중인 업소에서 일하고 있다면 선택해주세요.</p>
+                                                
+                                                {formData.venueOption === 'registered' && (
+                                                    <select 
+                                                        name="registeredVenueId"
+                                                        value={formData.registeredVenueId}
+                                                        onChange={handleChange}
+                                                        className="w-full bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 rounded-xl py-3 px-4 text-sm font-bold outline-none border focus:border-primary/50 transition-colors"
+                                                    >
+                                                        <option value="">소속 업체를 선택하세요</option>
+                                                        {venues.map(v => (
+                                                            <option key={v.id} value={v.id}>{v.name}</option>
+                                                        ))}
+                                                    </select>
+                                                )}
                                             </div>
                                         </div>
                                     </label>
 
-                                    <label className={`cursor-pointer border-2 rounded-2xl p-6 transition-all ${formData.venuePreference === 'specific' ? 'border-primary bg-primary/5 shadow-xl shadow-primary/10' : 'border-zinc-200 dark:border-zinc-800 hover:border-primary/30'}`}>
-                                        <div className="flex items-center gap-4 mb-3">
+                                    {/* Option 2: Unregistered Venue */}
+                                    <label className={`block cursor-pointer border-2 rounded-2xl p-5 transition-all ${formData.venueOption === 'unregistered' ? 'border-primary bg-primary/5 shadow-xl shadow-primary/10' : 'border-zinc-200 dark:border-zinc-800 hover:border-primary/30'}`}>
+                                        <div className="flex items-start gap-4">
                                             <input 
                                                 type="radio" 
-                                                name="venuePreference" 
-                                                value="specific" 
-                                                checked={formData.venuePreference === 'specific'}
+                                                name="venueOption" 
+                                                value="unregistered" 
+                                                checked={formData.venueOption === 'unregistered'}
                                                 onChange={handleChange}
-                                                className="w-5 h-5 accent-primary" 
+                                                className="w-5 h-5 accent-primary mt-1 flex-shrink-0" 
                                             />
-                                            <div>
-                                                <p className="font-black text-lg">특정 업소 바로 지원</p>
-                                                <p className="text-xs text-zinc-500 font-medium mt-1">지인 추천이나 이미 마음속에 정해둔 특정 프리미엄 라운지에 직접 이력서를 제출합니다.</p>
+                                            <div className="flex-1 w-full">
+                                                <p className="font-black text-lg text-zinc-900 dark:text-white">미등록 업체 근무 중</p>
+                                                <p className="text-xs text-zinc-500 font-medium mt-1 mb-3">근무 중인 업소가 목록에 없을 경우 직접 입력해 주시면 관리자가 확인 후 등록해 드립니다.</p>
+                                                
+                                                {formData.venueOption === 'unregistered' && (
+                                                    <input 
+                                                        type="text"
+                                                        name="unregisteredVenueName"
+                                                        value={formData.unregisteredVenueName}
+                                                        onChange={handleChange}
+                                                        placeholder="예: 클럽 시크릿 (마카티)"
+                                                        className="w-full bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 rounded-xl py-3 px-4 text-sm font-bold outline-none border focus:border-primary/50 transition-colors"
+                                                    />
+                                                )}
                                             </div>
                                         </div>
-                                        {formData.venuePreference === 'specific' && (
-                                            <select className="w-full mt-2 bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 rounded-xl py-3 px-4 text-sm font-bold outline-none border ml-9 w-[calc(100%-2.25rem)]">
-                                                <option>업소를 선택하세요</option>
-                                                <option>Grand Palace JTV (Pasay)</option>
-                                                <option>Club Galaxy (Makati)</option>
-                                            </select>
-                                        )}
+                                    </label>
+
+                                    {/* Option 3: Unemployed / Pool */}
+                                    <label className={`block cursor-pointer border-2 rounded-2xl p-5 transition-all ${formData.venueOption === 'unemployed' ? 'border-primary bg-primary/5 shadow-xl shadow-primary/10' : 'border-zinc-200 dark:border-zinc-800 hover:border-primary/30'}`}>
+                                        <div className="flex items-start gap-4">
+                                            <input 
+                                                type="radio" 
+                                                name="venueOption" 
+                                                value="unemployed" 
+                                                checked={formData.venueOption === 'unemployed'}
+                                                onChange={handleChange}
+                                                className="w-5 h-5 accent-primary mt-1 flex-shrink-0" 
+                                            />
+                                            <div className="flex-1 w-full">
+                                                <p className="font-black text-lg text-zinc-900 dark:text-white">미취업 (구직 중 / 인재풀 등록)</p>
+                                                <p className="text-xs text-zinc-500 font-medium mt-1">이력서를 공개하여 JTV STAR 제휴 업소 관리자들의 스카웃(면접 제안)을 기다립니다.</p>
+                                            </div>
+                                        </div>
                                     </label>
                                 </div>
                             </div>
@@ -279,15 +402,21 @@ const CCAApply: React.FC = () => {
                                     이전으로
                                 </button>
                             )}
+                            
                             <button 
                                 type="submit" 
-                                disabled={isSubmitting || (step === 2 && formData.languages.length === 0)}
-                                className="ml-auto px-10 py-4 bg-primary text-[#1b180d] rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 min-w-[140px]"
+                                disabled={
+                                    isSubmitting || 
+                                    (step === 1 && !isStep1Valid) ||
+                                    (step === 3 && !isStep3Valid) ||
+                                    (step === 4 && !isStep4Valid)
+                                }
+                                className="ml-auto px-10 py-4 bg-primary text-[#1b180d] rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 min-w-[140px] disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed"
                             >
                                 {isSubmitting ? (
                                     <span className="material-symbols-outlined animate-spin">cyclone</span>
                                 ) : step === 4 ? (
-                                    '지원 완료하기'
+                                    '지원서 제출하기'
                                 ) : (
                                     <>다음 단계 <span className="material-symbols-outlined text-sm">arrow_forward</span></>
                                 )}

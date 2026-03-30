@@ -102,8 +102,8 @@ const CCALanding: React.FC = () => {
                                 <span className="material-symbols-outlined">payments</span>
                             </div>
                             <div>
-                                <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">이번 달 수익금</p>
-                                <p className="text-lg font-black tracking-tighter">₱ 128,500 <span className="text-primary text-xs">↑</span></p>
+                                <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">이번 달 예상 수입금</p>
+                                <p className="text-lg font-black tracking-tighter">₱ 200,000 <span className="text-primary text-xs">↑</span></p>
                             </div>
                         </div>
                     </div>
