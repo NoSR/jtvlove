@@ -89,7 +89,8 @@ const Home: React.FC = () => {
   };
 
   const liveCCAs = React.useMemo(() => {
-    const isMock = !settings || settings.marketing_live_ccas !== 'false'; // Default to true
+    // Only mock if EXPLICITLY set to 'true' in settings
+    const isMock = settings?.marketing_live_ccas === 'true'; 
     const activeCcas = ccas.filter(cca => cca.status === 'active');
     
     if (isMock) {

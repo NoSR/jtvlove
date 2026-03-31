@@ -195,7 +195,7 @@ export const onRequestPost = async (context: { env: Env, request: Request }) => 
       notice_hero_subtitle || '',
       ui_texts || '',
       hide_site_name || 'false',
-      marketing_live_ccas || 'true'
+      marketing_live_ccas || 'false'
     ).run();
 
     return new Response(JSON.stringify({ success: true }), {

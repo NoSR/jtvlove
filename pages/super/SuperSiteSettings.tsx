@@ -42,7 +42,7 @@ const SuperSiteSettings: React.FC = () => {
     notice_hero_subtitle: '',
     ui_texts: {},
     hide_site_name: 'false',
-    marketing_live_ccas: 'true'
+    marketing_live_ccas: 'false'
   });
 
   // Tab 2: Hero
@@ -96,7 +96,7 @@ const SuperSiteSettings: React.FC = () => {
           notice_hero_subtitle: siteData.notice_hero_subtitle || '',
           ui_texts: siteData.ui_texts || {},
           hide_site_name: siteData.hide_site_name || 'false',
-          marketing_live_ccas: siteData.marketing_live_ccas || 'true'
+          marketing_live_ccas: siteData.marketing_live_ccas || 'false'
         });
 
         if (siteData.ui_texts) {
