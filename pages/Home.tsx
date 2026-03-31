@@ -292,24 +292,33 @@ const Home: React.FC = () => {
               </div>
               <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-2 snap-x pr-4">
                  {liveCCAs.map(cca => (
-                   <Link to={`/ccas/${cca.id}`} key={`live-${cca.id}`} className="snap-start flex-shrink-0 w-36 md:w-44 group relative">
-                      <div className="aspect-[3/4] rounded-2xl overflow-hidden relative border border-white/5 group-hover:border-primary/50 transition-colors shadow-2xl">
-                         <img src={cca.image} alt={cca.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                              onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=600&fit=crop'; }}/>
-                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
-                         <div className="absolute top-2 left-2 bg-red-600/90 px-2.5 py-1 rounded text-[9px] font-black text-white uppercase tracking-wider backdrop-blur-md shadow-lg shadow-red-500/20 border border-white/10 flex items-center gap-1.5">
+                   <Link to={`/ccas/${cca.id}`} key={`live-${cca.id}`} className="snap-start flex-shrink-0 w-24 md:w-28 group flex flex-col items-center pt-2">
+                      <div className="relative w-20 h-20 md:w-24 md:h-24 mb-4">
+                         {/* Circle Gradient Border */}
+                         <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-red-600 to-rose-400 opacity-80 group-hover:scale-105 transition-transform duration-300"></div>
+                         
+                         {/* Image Container */}
+                         <div className="absolute inset-0 rounded-full overflow-hidden border-4 border-zinc-950 bg-zinc-950">
+                           <img src={cca.image} alt={cca.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                                onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=600&fit=crop'; }}/>
+                           <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
+                         </div>
+                         
+                         {/* Live Badge */}
+                         <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-red-600 px-2.5 py-0.5 rounded-full text-[9px] font-black text-white uppercase tracking-wider shadow-lg shadow-red-500/20 border border-white/20 flex items-center justify-center gap-1.5 whitespace-nowrap z-10">
                             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
                             출근중
                          </div>
-                         <div className="absolute bottom-3 left-3 right-3">
-                            <div className="flex justify-between items-end">
-                               <h4 className="font-extrabold text-sm text-white truncate drop-shadow-md">{cca.nickname || cca.name}</h4>
-                               {cca.grade && <span className="text-[8px] px-1.5 py-0.5 rounded uppercase font-black bg-primary text-[#1b180d]">{cca.grade}</span>}
-                            </div>
-                            <p className="text-[10px] text-zinc-300 truncate mt-1 opacity-80 font-medium flex items-center gap-1">
-                               <span className="material-symbols-outlined text-[10px]">location_on</span> {cca.venueName}
-                            </p>
+                      </div>
+                      
+                      <div className="text-center w-full px-1 flex flex-col items-center">
+                         <div className="flex items-center gap-1 justify-center max-w-full">
+                           <h4 className="font-extrabold text-sm text-white truncate group-hover:text-primary transition-colors">{cca.nickname || cca.name}</h4>
+                           {cca.grade && <span className="flex-shrink-0 text-[7px] px-1 py-[1px] rounded uppercase font-black bg-primary text-[#1b180d]">{cca.grade}</span>}
                          </div>
+                         <p className="text-[10px] text-zinc-400 truncate mt-0.5 font-medium flex items-center justify-center gap-0.5 w-full">
+                            <span className="material-symbols-outlined text-[10px]">location_on</span> <span className="truncate">{cca.venueName}</span>
+                         </p>
                       </div>
                    </Link>
                  ))}
