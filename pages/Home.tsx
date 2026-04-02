@@ -91,21 +91,26 @@ const Home: React.FC = () => {
   const liveCCAs = React.useMemo(() => {
     // Only mock if EXPLICITLY set to 'true' in settings
     const isMock = settings?.marketing_live_ccas === 'true'; 
-    const activeCcas = ccas.filter(cca => cca.status === 'active');
     
     if (isMock) {
+      const activeCcas = ccas.filter(cca => cca.status === 'active');
       // Shuffle for random mock check-ins
       return [...activeCcas].sort(() => 0.5 - Math.random()).slice(0, 8);
     } else {
       // Actual real check-ins
-      return activeCcas
-        .filter(cca => (cca as any).attendanceStatus === 'checked_in' || (cca as any).isWorking)
+      // Include anyone who is explicitly marked as working from backend
+      return ccas
+        .filter(cca => 
+          (cca as any).isWorking === true || 
+          (cca as any).attendanceStatus === 'checked_in' || 
+          (cca as any).attendanceStatus === 'working'
+        )
         .sort((a, b) => {
           const timeA = new Date((a as any).checkInAt || 0).getTime();
           const timeB = new Date((b as any).checkInAt || 0).getTime();
-          return timeA - timeB; // Earliest check-in first
+          return timeB - timeA; // Latest check-in first (more relevant for "Now Live")
         })
-        .slice(0, 8);
+        .slice(0, 10); // Show more if available
     }
   }, [ccas, settings]);
 

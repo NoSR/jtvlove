@@ -20,15 +20,23 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
     try {
       const venueIdParam = url.searchParams.get('venueId');
 
-      const today = new Date().toISOString().split("T")[0];
+      // More robust attendance check: anyone currently 'checked_in' 
+      // or who checked in within the last 24 hours and hasn't checked out.
       let query = `
         SELECT c.*, v.name as venueName, v.name as venue_name, v.region as region,
                a.status as attendanceStatus, a.check_in_at as checkInAt
         FROM ccas c 
         LEFT JOIN venues v ON c.venue_id = v.id
-        LEFT JOIN cca_attendance a ON c.id = a.cca_id AND a.attendance_date = ?
+        LEFT JOIN (
+          SELECT * FROM cca_attendance 
+          WHERE (cca_id, check_in_at) IN (
+            SELECT cca_id, MAX(check_in_at) 
+            FROM cca_attendance 
+            GROUP BY cca_id
+          )
+        ) a ON c.id = a.cca_id
       `;
-      let queryParams: any[] = [today];
+      let queryParams: any[] = [];
 
       if (id) {
         query += " WHERE c.id = ?";
@@ -37,8 +45,11 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
 
         if (!result) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
 
+        const isWorking = result.attendanceStatus === 'checked_in';
+
         return new Response(JSON.stringify({
           ...result,
+          isWorking,
           attendanceStatus: result.attendanceStatus,
           checkInAt: result.checkInAt,
           languages: result.languages ? JSON.parse(result.languages) : [],
@@ -72,42 +83,45 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
       } catch (e: any) { }
 
       if (venueIdParam) {
-        query += " WHERE c.venue_id = ? OR c.pending_venue_id = ?";
+        query += " WHERE (c.venue_id = ? OR c.pending_venue_id = ?)";
         queryParams.push(venueIdParam, venueIdParam);
       }
 
       const { results } = await env.DB.prepare(query).bind(...queryParams).all();
 
-      const formattedResults = results.map((c: any) => ({
-        ...c,
-        languages: c.languages ? JSON.parse(c.languages) : [],
-        venueId: c.venue_id,
-        sns: c.sns_links ? JSON.parse(c.sns_links) : {},
-        experienceHistory: c.experience_history ? JSON.parse(c.experience_history) : [],
-        realNameFirst: c.real_name_first,
-        realNameMiddle: c.real_name_middle,
-        realNameLast: c.real_name_last,
-        maritalStatus: c.marital_status,
-        childrenStatus: c.children_status,
-        specialNotes: c.special_notes,
-        oneLineStory: c.one_line_story,
-        zodiac: c.zodiac,
-        weight: c.weight,
-        drinking: c.drinking,
-        smoking: c.smoking,
-        pets: c.pets,
-        specialties: c.specialties ? JSON.parse(c.specialties) : [],
-        viewsCount: c.views_count,
-        likesCount: c.likes_count,
-        postsCount: c.posts_count,
-        pendingVenueId: c.pending_venue_id,
-        // 현재 조회하는 venue가 이 CCA의 pending venue인 경우, 프론트에선 applicant로 처리되도록 강제 변경
-        status: (venueIdParam && c.pending_venue_id === venueIdParam) ? 'applicant' : c.status,
-        originalStatus: c.status,
-        isNew: c.is_new === 1,
-        attendanceStatus: c.attendanceStatus,
-        checkInAt: c.checkInAt
-      }));
+      const formattedResults = results.map((c: any) => {
+        const isWorking = c.attendanceStatus === 'checked_in';
+        return {
+          ...c,
+          isWorking,
+          languages: c.languages ? JSON.parse(c.languages) : [],
+          venueId: c.venue_id,
+          sns: c.sns_links ? JSON.parse(c.sns_links) : {},
+          experienceHistory: c.experience_history ? JSON.parse(c.experience_history) : [],
+          realNameFirst: c.real_name_first,
+          realNameMiddle: c.real_name_middle,
+          realNameLast: c.real_name_last,
+          maritalStatus: c.marital_status,
+          childrenStatus: c.children_status,
+          specialNotes: c.special_notes,
+          oneLineStory: c.one_line_story,
+          zodiac: c.zodiac,
+          weight: c.weight,
+          drinking: c.drinking,
+          smoking: c.smoking,
+          pets: c.pets,
+          specialties: c.specialties ? JSON.parse(c.specialties) : [],
+          viewsCount: c.views_count,
+          likesCount: c.likes_count,
+          postsCount: c.posts_count,
+          pendingVenueId: c.pending_venue_id,
+          status: (venueIdParam && c.pending_venue_id === venueIdParam) ? 'applicant' : c.status,
+          originalStatus: c.status,
+          isNew: c.is_new === 1,
+          attendanceStatus: c.attendanceStatus,
+          checkInAt: c.checkInAt
+        };
+      });
 
       return new Response(JSON.stringify(formattedResults), {
         headers: { "Content-Type": "application/json" },
