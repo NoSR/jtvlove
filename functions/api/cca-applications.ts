@@ -271,8 +271,8 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
           db.prepare(`
             INSERT INTO ccas (
               id, name, nickname, real_name_first, phone, venue_id, image, status, grade,
-              languages, special_notes, is_new, password, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', 'NEW', ?, ?, 1, '1234', ?)
+              languages, special_notes, is_new, password, height, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', 'NEW', ?, ?, 1, '1234', ?, ?)
           `).bind(
             ccaId,
             offer.nickname || offer.name,
@@ -281,8 +281,9 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
             offer.phone || '',
             offer.venue_id,
             offer.image || '',
-            offer.languages || '[]',
-            `[Job Application] Body Size: ${offer.body_size || 'N/A'}\nExperience: ${offer.experience || 'N/A'}\nIntro: ${offer.introduction || 'N/A'}`,
+            JSON.stringify(typeof offer.languages === 'string' ? JSON.parse(offer.languages) : (offer.languages || [])),
+            `[Job Application] Experience: ${offer.experience || 'N/A'}\nIntro: ${offer.introduction || 'N/A'}`,
+            offer.body_size || '',
             now
           ),
           // Mark offer as accepted
@@ -340,8 +341,8 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
           db.prepare(`
             INSERT INTO ccas (
               id, name, nickname, real_name_first, phone, venue_id, image, status, grade,
-              languages, special_notes, is_new, password, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', 'NEW', ?, ?, 1, '1234', ?)
+              languages, special_notes, is_new, password, height, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', 'NEW', ?, ?, 1, '1234', ?, ?)
           `).bind(
             ccaId,
             app.nickname || app.name,
@@ -350,8 +351,9 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
             app.phone || '',
             venueId,
             app.image || '',
-            app.languages || '[]',
-            `[Direct Assignment] Body Size: ${app.body_size || 'N/A'}\nExperience: ${app.experience || 'N/A'}\nIntro: ${app.introduction || 'N/A'}`,
+            JSON.stringify(typeof app.languages === 'string' ? JSON.parse(app.languages) : (app.languages || [])),
+            `[Direct Assignment] Experience: ${app.experience || 'N/A'}\nIntro: ${app.introduction || 'N/A'}`,
+            app.body_size || '',
             now
           ),
           // Mark application as hired

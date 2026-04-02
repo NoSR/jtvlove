@@ -31,7 +31,9 @@ const CCAApply: React.FC = () => {
         age: '',
         phone: '',
         email: '',
-        bodySize: '', // Body Size
+        height: '', // Height in feet (e.g. 5.2)
+        dressSize: '', // Dress Size (e.g. S, M, L)
+        bodySize: '', // Combined string
         
         // Details and Charming Points
         languages: [] as string[],
@@ -280,7 +282,7 @@ const CCAApply: React.FC = () => {
                                         required 
                                         value={formData.phone} 
                                         onChange={handleChange}
-                                        placeholder="010-1234-5678" 
+                                        placeholder="09X1234567" 
                                         className="w-full bg-zinc-50 dark:bg-zinc-800 border-zinc-100 dark:border-transparent rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                                     />
                                 </div>
@@ -302,15 +304,38 @@ const CCAApply: React.FC = () => {
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-4">Body Size <span className="text-red-500">*</span></label>
-                                        <input 
-                                            type="text" 
-                                            name="bodySize" 
-                                            required 
-                                            value={formData.bodySize} 
-                                            onChange={handleChange}
-                                            placeholder="e.g. 165cm / Size S" 
-                                            className="w-full bg-zinc-50 dark:bg-zinc-800 border-zinc-100 dark:border-transparent rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                                        />
+                                        <div className="flex gap-2">
+                                            <div className="relative flex-1">
+                                                <input 
+                                                    type="text" 
+                                                    name="height" 
+                                                    required 
+                                                    value={formData.height} 
+                                                    onChange={(e) => {
+                                                        const val = e.target.value.replace(/[^0-9.]/g, '');
+                                                        setFormData(prev => ({ ...prev, height: val, bodySize: `${val}" / Size ${prev.dressSize}` }));
+                                                    }}
+                                                    placeholder="5.2" 
+                                                    className="w-full bg-zinc-50 dark:bg-zinc-800 border-zinc-100 dark:border-transparent rounded-2xl py-4 px-6 pr-12 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                                                />
+                                                <span className="absolute right-6 top-1/2 -translate-y-1/2 text-xs font-black text-zinc-400">ft (")</span>
+                                            </div>
+                                            <div className="relative flex-1">
+                                                <input 
+                                                    type="text" 
+                                                    name="dressSize" 
+                                                    required 
+                                                    value={formData.dressSize} 
+                                                    onChange={(e) => {
+                                                        const val = e.target.value.toUpperCase();
+                                                        setFormData(prev => ({ ...prev, dressSize: val, bodySize: `${prev.height}" / Size ${val}` }));
+                                                    }}
+                                                    placeholder="S" 
+                                                    className="w-full bg-zinc-50 dark:bg-zinc-800 border-zinc-100 dark:border-transparent rounded-2xl py-4 px-6 pl-12 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                                                />
+                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-zinc-400 uppercase">Size</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

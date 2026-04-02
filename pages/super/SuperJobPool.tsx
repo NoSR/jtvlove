@@ -73,6 +73,20 @@ const SuperJobPool: React.FC = () => {
         hired: applications.filter(a => a.status === 'hired').length,
     };
 
+    const formatBodySize = (val: string) => {
+        if (!val) return '-';
+        // Extract height (digits and optional dot) from the beginning
+        const heightMatch = val.match(/^([0-9.]+)/);
+        if (heightMatch) {
+            const ft = parseFloat(heightMatch[1]);
+            const cm = Math.round(ft * 30.48);
+            // Replace the matched height with the combined ft/cm format
+            // We preserve the rest of the string (e.g. " / Size S")
+            return `${heightMatch[1]}" (${cm}cm)${val.substring(heightMatch[0].length)}`;
+        }
+        return val;
+    };
+
     return (
         <div>
             {/* Header */}
@@ -165,6 +179,7 @@ const SuperJobPool: React.FC = () => {
                                             <td className="p-4 hidden md:table-cell">
                                                 <div className="flex gap-1 flex-wrap">
                                                     {app.age && <span className="px-2 py-0.5 bg-zinc-800 rounded text-[9px] font-bold text-gray-400">{app.age}세</span>}
+                                                    {app.body_size && <span className="px-2 py-0.5 bg-zinc-800 rounded text-[9px] font-bold text-gray-400">{formatBodySize(app.body_size)}</span>}
                                                     {(app.languages || []).map((l: string) => (
                                                         <span key={l} className="px-2 py-0.5 bg-zinc-800 rounded text-[9px] font-bold text-gray-400">{l}</span>
                                                     ))}

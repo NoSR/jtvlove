@@ -20,6 +20,17 @@ const SuperPartners: React.FC = () => {
    const [ccas, setCcas] = useState<any[]>([]);
    const [loading, setLoading] = useState(true);
 
+   const formatBodySize = (val: string) => {
+      if (!val) return '-';
+      const heightMatch = String(val).match(/^([0-9.]+)/);
+      if (heightMatch) {
+         const ft = parseFloat(heightMatch[1]);
+         const cm = Math.round(ft * 30.48);
+         return `${heightMatch[1]}" (${cm}cm)${String(val).substring(heightMatch[0].length)}`;
+      }
+      return val;
+   };
+
    // Modals
    const [showHistoryModal, setShowHistoryModal] = useState(false);
    const [showDetailModal, setShowDetailModal] = useState(false);
@@ -504,6 +515,7 @@ const SuperPartners: React.FC = () => {
                            <th className="px-8 py-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">Region</th>
                            <th className="px-8 py-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">Name</th>
                            {activeTab === 'ccas' && <th className="px-8 py-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">Venue</th>}
+                           {activeTab === 'ccas' && <th className="px-8 py-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">Info</th>}
                            <th className="px-8 py-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">Res.</th>
                            {activeTab === 'venues' && <th className="px-8 py-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">CCAs</th>}
                            <th className="px-8 py-6 text-[10px] font-black text-gray-500 uppercase tracking-widest text-right">Actions</th>
@@ -524,6 +536,14 @@ const SuperPartners: React.FC = () => {
                                  </div>
                               </td>
                               {activeTab === 'ccas' && <td className="px-8 py-6 text-xs font-bold text-gray-400">{item.venue_name || '-'}</td>}
+                              {activeTab === 'ccas' && (
+                                 <td className="px-8 py-6">
+                                    <div className="flex flex-col gap-1">
+                                       <span className="text-[10px] font-bold text-gray-400">{item.age || '-'}세</span>
+                                       <span className="text-[10px] font-bold text-[#ffd700]">{formatBodySize(item.height)}</span>
+                                    </div>
+                                 </td>
+                              )}
                               <td className="px-8 py-6">
                                  <span className={`px-3 py-1 rounded-full text-[10px] font-black ${item.today_reservations > 0 ? 'bg-red-600 text-white' : 'bg-white/5 text-gray-500'}`}>
                                     {item.today_reservations || 0}
