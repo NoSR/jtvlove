@@ -191,22 +191,22 @@ const SuperPartners: React.FC = () => {
 
    const handleResetAdminPassword = async () => {
       if (!newAdminPassword) {
-         alert('鍮꾨?踰덊샇瑜??낅젰?댁＜?몄슂.');
+         alert('Please enter a password.');
          return;
       }
-      if (!window.confirm(`?낆껜 愿由ъ옄??鍮꾨?踰덊샇瑜?"${newAdminPassword}"(??濡?媛뺤젣 蹂寃쏀븯?쒓쿋?듬땲源?`)) return;
+      if (!window.confirm(`Are you sure you want to change the admin password to "${newAdminPassword}"?`)) return;
 
       setIsResetting(true);
       try {
          const result = await apiService.resetVenueAdminPassword(editForm.id, newAdminPassword);
          if (result.success) {
-            alert('鍮꾨?踰덊샇媛 ?깃났?곸쑝濡?蹂寃쎈릺?덉뒿?덈떎.');
+            alert('Password changed successfully.');
             setNewAdminPassword('');
          } else {
-            alert(`蹂寃??ㅽ뙣: ${result.error || '?????녿뒗 ?ㅻ쪟'}`);
+            alert(`Change failed: ${result.error || 'Unknown error'}`);
          }
       } catch (err: any) {
-         alert(`?ㅻ쪟 諛쒖깮: ${err.message}`);
+         alert(`Error occurred: ${err.message}`);
       } finally {
          setIsResetting(false);
       }
@@ -240,7 +240,7 @@ const SuperPartners: React.FC = () => {
 
             const venueId = isCreateMode ? undefined : (editForm.id || selectedItem?.id);
             if (!isCreateMode && !venueId) {
-               alert("?섏젙 ???낆냼 ID媛 ?꾨씫?섏뿀?듬땲?? 李쎌쓣 ?リ퀬 ?ㅼ떆 ?쒕룄??二쇱꽭??");
+               alert("Venue ID is missing. Please close the window and try again.");
                setIsSaving(false);
                return;
             }
@@ -330,11 +330,11 @@ const SuperPartners: React.FC = () => {
             if (url) {
                setEditForm({ ...editForm, image: url });
             } else {
-               alert("?대?吏 ?뺤텞 諛??낅줈?쒖뿉 ?ㅽ뙣?덉뒿?덈떎.");
+               alert("Failed to upload image.");
             }
          } catch (err) {
             console.error("Image upload error", err);
-            alert("?대?吏 泥섎━ 以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.");
+            alert("Error occurred during image processing.");
          }
       }
    };
@@ -415,10 +415,10 @@ const SuperPartners: React.FC = () => {
 
             data.forEach((row: any) => {
                // Assuming standard columns: Category, Name, Price, Promotion
-               const category = row['Category'] || row['移댄뀒怨좊━'] || currentTags[0] || 'Uncategorized';
-               const name = row['Name'] || row['硫붾돱紐?] || row['?대쫫'];
-               const price = row['Price'] || row['媛寃?];
-               const promotion = row['Promotion'] || row['?꾨줈紐⑥뀡'] || '';
+               const category = row['Category'] || row['카테고리'] || currentTags[0] || 'Uncategorized';
+               const name = row['Name'] || row['메뉴명'] || row['이름'];
+               const price = row['Price'] || row['가격'];
+               const promotion = row['Promotion'] || row['프로모션'] || '';
 
                if (!name || price === undefined) return; // Skip invalid rows
 
@@ -814,8 +814,8 @@ const SuperPartners: React.FC = () => {
                                              </label>
                                           </div>
                                        </div>
-                                       </div>
                                     </div>
+                                 </div>
                                  </div>
                               )}
 
@@ -916,7 +916,6 @@ const SuperPartners: React.FC = () => {
                                           </div>
                                           <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 group-hover:text-white">Append New Neural Delicacy</span>
                                        </button>
-                                       </div>
                                     </div>
                                  </div>
                               )}
@@ -982,7 +981,6 @@ const SuperPartners: React.FC = () => {
                                                 <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">No private units detected</p>
                                              </div>
                                           )}
-                                       </div>
                                        </div>
                                     </div>
                                  </div>
