@@ -1459,6 +1459,115 @@ export const apiService = {
         recentPosts: [], recentUsers: []
       };
     }
+  },
+
+  // ═══════════════════════════════════════════
+  // CCA Applications & Job Pool System
+  // ═══════════════════════════════════════════
+
+  async submitCCAApplication(data: any): Promise<{ success: boolean; id?: string; error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE}/cca-applications?action=apply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return await response.json();
+    } catch (error: any) {
+      console.error('submitCCAApplication error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  async getCCAApplications(status?: string): Promise<any[]> {
+    try {
+      let url = `${API_BASE}/cca-applications?action=listAll`;
+      if (status) url += `&status=${encodeURIComponent(status)}`;
+      const response = await fetch(url);
+      if (!response.ok) return [];
+      return await response.json();
+    } catch (error) {
+      console.error('getCCAApplications error:', error);
+      return [];
+    }
+  },
+
+  async sendJobOffer(data: { applicationId: string; venueId: string; venueName?: string; message?: string }): Promise<{ success: boolean; id?: string; error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE}/cca-applications?action=sendOffer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return await response.json();
+    } catch (error: any) {
+      console.error('sendJobOffer error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  async checkApplicantStatus(name: string, pin: string): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE}/cca-applications?action=applicantStatus&name=${encodeURIComponent(name)}&pin=${encodeURIComponent(pin)}`);
+      return await response.json();
+    } catch (error: any) {
+      console.error('checkApplicantStatus error:', error);
+      return { error: error.message };
+    }
+  },
+
+  async acceptJobOffer(offerId: string, name?: string, pin?: string): Promise<{ success: boolean; ccaId?: string; error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE}/cca-applications?action=acceptOffer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ offerId, name, pin }),
+      });
+      return await response.json();
+    } catch (error: any) {
+      console.error('acceptJobOffer error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  async rejectJobOffer(offerId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE}/cca-applications?action=rejectOffer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ offerId }),
+      });
+      return await response.json();
+    } catch (error: any) {
+      console.error('rejectJobOffer error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  async directAssignApplicant(applicationId: string, venueId: string): Promise<{ success: boolean; ccaId?: string; error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE}/cca-applications?action=directAssign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ applicationId, venueId }),
+      });
+      return await response.json();
+    } catch (error: any) {
+      console.error('directAssignApplicant error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  async deleteCCAApplication(id: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE}/cca-applications?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      });
+      return await response.json();
+    } catch (error: any) {
+      console.error('deleteCCAApplication error:', error);
+      return { success: false, error: error.message };
+    }
   }
 };
 

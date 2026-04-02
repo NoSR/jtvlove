@@ -17,6 +17,7 @@ import NoticeCenter from './pages/NoticeCenter';
 import Policy from './pages/Policy';
 import Footer from './pages/Footer';
 import Guidebook from './pages/Guidebook';
+import ApplicantStatus from './pages/ApplicantStatus';
 
 
 // Admin & Portal
@@ -48,6 +49,7 @@ import SuperNotice from './pages/super/SuperNotice';
 import SuperMessages from './pages/super/SuperMessages';
 import SuperInquiries from './pages/super/SuperInquiries';
 import SuperTextManager from './pages/super/SuperTextManager';
+import SuperJobPool from './pages/super/SuperJobPool';
 
 // Venue Admin Auth & Selector
 import VenueAdminLogin from './pages/admin/VenueAdminLogin';
@@ -309,6 +311,7 @@ const App: React.FC = () => {
           <Route path="/notice" element={<NoticeCenter />} />
           <Route path="/policy" element={<Policy />} />
           <Route path="/guide" element={<Guidebook />} />
+          <Route path="/applicant/status" element={<ApplicantStatus />} />
 
           {/* Venue Admin Auth */}
           <Route path="/admin/login" element={<VenueAdminLogin />} />
@@ -361,6 +364,7 @@ const SuperAdminProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ chi
 
 import AdminMessages from './pages/admin/AdminMessages';
 import AdminInquiry from './pages/admin/AdminInquiry';
+import AdminJobPool from './pages/admin/AdminJobPool';
 
 const AdminLayoutRoutes = () => (
   <Routes>
@@ -370,6 +374,7 @@ const AdminLayoutRoutes = () => (
     <Route path="/ccas" element={<AdminLayout><AdminCCAs /></AdminLayout>} />
     <Route path="/notices" element={<AdminLayout><AdminNotices /></AdminLayout>} />
     <Route path="/inquiry" element={<AdminLayout><AdminInquiry /></AdminLayout>} />
+    <Route path="/job-pool" element={<AdminLayout><AdminJobPool /></AdminLayout>} />
   </Routes>
 );
 
@@ -399,6 +404,7 @@ const SuperAdminRoutes = () => (
     <Route path="/inquiries" element={<SuperInquiries />} />
     <Route path="/notices" element={<SuperNotice />} />
     <Route path="/texts" element={<SuperTextManager />} />
+    <Route path="/job-pool" element={<SuperJobPool />} />
   </Routes>
 );
 
@@ -410,6 +416,7 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { path: '/admin/messages', name: '메시지', icon: 'mail' },
     { path: '/admin/profile', name: '업소 설정', icon: 'storefront' },
     { path: '/admin/ccas', name: '스태프 관리', icon: 'groups' },
+    { path: '/admin/job-pool', name: '인재풀', icon: 'groups_3' },
     { path: '/admin/notices', name: '공지사항', icon: 'campaign' },
     { path: '/admin/inquiry', name: '시스템 문의', icon: 'support_agent' },
   ];

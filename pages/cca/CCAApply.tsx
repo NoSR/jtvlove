@@ -30,6 +30,7 @@ const CCAApply: React.FC = () => {
         nickname: '',
         age: '',
         phone: '',
+        email: '',
         bodySize: '', // Body Size
         
         // Details and Charming Points
@@ -44,7 +45,10 @@ const CCAApply: React.FC = () => {
         // Employment Status Options
         venueOption: 'registered' as 'registered' | 'unregistered' | 'unemployed',
         registeredVenueId: '',
-        unregisteredVenueName: ''
+        unregisteredVenueName: '',
+
+        // PIN for applicant status check (unemployed only)
+        pin: ''
     });
 
     const handleNext = (e: React.FormEvent) => {
@@ -92,37 +96,64 @@ const CCAApply: React.FC = () => {
                 if (uploadedUrl) imageUrl = uploadedUrl;
             }
 
-            let finalVenueId = 'pool';
-            let finalSpecialNotes = `[Job Application]\nBody Size/Type: ${formData.bodySize}\nIntroduction: ${formData.introduction}`;
+            // ── Unemployed / Job Seeker → new cca_applications table ──
+            if (formData.venueOption === 'unemployed') {
+                const appData = {
+                    name: formData.realName,
+                    nickname: formData.nickname || formData.realName,
+                    realName: formData.realName,
+                    phone: formData.phone,
+                    email: formData.email,
+                    age: formData.age,
+                    bodySize: formData.bodySize,
+                    languages: formData.languages,
+                    experience: formData.experience,
+                    introduction: formData.introduction,
+                    image: imageUrl,
+                    pin: formData.pin || '0000',
+                    venueOption: 'unemployed'
+                };
 
-            if (formData.venueOption === 'registered' && formData.registeredVenueId) {
-                finalVenueId = formData.registeredVenueId;
-            } else if (formData.venueOption === 'unregistered') {
-                finalSpecialNotes += `\nPreferred (Current) Venue (Unregistered): ${formData.unregisteredVenueName}`;
-            }
-
-            const ccaData = {
-                name: formData.realName,
-                nickname: formData.nickname || formData.realName,
-                realNameFirst: formData.realName,
-                phone: formData.phone,
-                birthday: formData.age ? `${new Date().getFullYear() - parseInt(formData.age) + 1}-01-01` : '', // rough estimate
-                languages: formData.languages,
-                experienceHistory: [formData.experience],
-                specialNotes: finalSpecialNotes,
-                image: imageUrl,
-                venueId: finalVenueId,
-                status: 'applicant',
-                grade: 'NEW',
-                isNew: true,
-                password: '1234' // default temporary password
-            };
-
-            const result = await apiService.createCCA(ccaData);
-            if (result.success) {
-                setIsSuccess(true);
+                const result = await apiService.submitCCAApplication(appData);
+                if (result.success) {
+                    setIsSuccess(true);
+                } else {
+                    alert(result.error || 'Failed to submit application. Please try again later.');
+                }
             } else {
-                alert(result.error || 'Failed to submit application. Please try again later.');
+                // ── Registered / Unregistered → existing ccas table ──
+                let finalVenueId = 'v1';
+                let finalSpecialNotes = `[Job Application]\nBody Size/Type: ${formData.bodySize}\nIntroduction: ${formData.introduction}`;
+
+                if (formData.venueOption === 'registered' && formData.registeredVenueId) {
+                    finalVenueId = formData.registeredVenueId;
+                } else if (formData.venueOption === 'unregistered') {
+                    finalSpecialNotes += `\nPreferred (Current) Venue (Unregistered): ${formData.unregisteredVenueName}`;
+                }
+
+                const ccaData = {
+                    name: formData.realName,
+                    nickname: formData.nickname || formData.realName,
+                    realNameFirst: formData.realName,
+                    phone: formData.phone,
+                    birthday: formData.age ? `${new Date().getFullYear() - parseInt(formData.age) + 1}-01-01` : '',
+                    languages: formData.languages,
+                    experienceHistory: [formData.experience],
+                    specialNotes: finalSpecialNotes,
+                    image: imageUrl,
+                    venueId: finalVenueId,
+                    status: 'applicant',
+                    grade: 'NEW',
+                    isNew: true,
+                    password: '1234'
+                };
+
+                const result = await apiService.createCCA(ccaData);
+                if (result.success) {
+                    setIsSuccess(true);
+                } else {
+                    alert(result.error || 'Failed to submit application. Please try again later.');
+                }
             }
         } catch (error) {
             console.error('Submit error:', error);
@@ -140,13 +171,30 @@ const CCAApply: React.FC = () => {
                         <span className="material-symbols-outlined text-5xl text-emerald-500">check_circle</span>
                     </div>
                     <h2 className="text-3xl font-extrabold mb-4">Application Submitted!</h2>
-                    <p className="text-zinc-500 font-medium leading-relaxed mb-8">
+                    <p className="text-zinc-500 font-medium leading-relaxed mb-4">
                         Your partner registration application has been successfully submitted. <br />
-                        Our affiliated venue (or headquarters) will contact you within 24 hours.
+                        Our affiliated venue (or headquarters) will contact you soon.
                     </p>
-                    <Link to="/" className="block w-full py-4 bg-primary text-[#1b180d] rounded-2xl font-black uppercase text-sm tracking-widest shadow-xl hover:scale-105 transition-transform">
-                        Back to Home
-                    </Link>
+                    {formData.venueOption === 'unemployed' && (
+                        <div className="bg-primary/10 rounded-2xl p-5 mb-6 text-left">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">Important - Save your PIN!</p>
+                            <p className="text-sm font-bold">You can check your application status and job offers anytime using:</p>
+                            <div className="mt-3 bg-white dark:bg-zinc-800 rounded-xl p-4">
+                                <p className="text-xs font-bold text-zinc-500">Name: <span className="text-zinc-900 dark:text-white">{formData.realName}</span></p>
+                                <p className="text-xs font-bold text-zinc-500">PIN: <span className="text-zinc-900 dark:text-white text-lg">{formData.pin}</span></p>
+                            </div>
+                        </div>
+                    )}
+                    <div className="flex flex-col gap-3">
+                        {formData.venueOption === 'unemployed' && (
+                            <Link to="/applicant/status" className="block w-full py-4 bg-emerald-500 text-white rounded-2xl font-black uppercase text-sm tracking-widest shadow-xl hover:scale-105 transition-transform">
+                                Check My Status
+                            </Link>
+                        )}
+                        <Link to="/" className="block w-full py-4 bg-primary text-[#1b180d] rounded-2xl font-black uppercase text-sm tracking-widest shadow-xl hover:scale-105 transition-transform">
+                            Back to Home
+                        </Link>
+                    </div>
                 </div>
             </div>
         );
@@ -158,7 +206,7 @@ const CCAApply: React.FC = () => {
     const isStep4Valid = 
         (formData.venueOption === 'registered' && formData.registeredVenueId !== '') ||
         (formData.venueOption === 'unregistered' && formData.unregisteredVenueName.trim() !== '') ||
-        formData.venueOption === 'unemployed';
+        (formData.venueOption === 'unemployed' && formData.pin.trim().length >= 4);
 
     return (
         <div className="min-h-screen bg-[#faf9f6] dark:bg-zinc-950 font-display flex flex-col items-center justify-center p-4 sm:p-8">
@@ -427,7 +475,34 @@ const CCAApply: React.FC = () => {
                                             />
                                             <div className="flex-1 w-full">
                                                 <p className="font-black text-lg text-zinc-900 dark:text-white">Unemployed (Job Seeking / Talent Pool)</p>
-                                                <p className="text-xs text-zinc-500 font-medium mt-1">Publish your resume and wait for scouting (interview offers) from JTV STAR affiliated venue managers.</p>
+                                                <p className="text-xs text-zinc-500 font-medium mt-1 mb-3">Publish your resume and wait for scouting (interview offers) from JTV STAR affiliated venue managers.</p>
+                                                
+                                                {formData.venueOption === 'unemployed' && (
+                                                    <div className="space-y-3 mt-3 p-4 bg-primary/5 rounded-xl border border-primary/20">
+                                                        <p className="text-[10px] font-black uppercase tracking-widest text-primary">Status Check Credentials</p>
+                                                        <input 
+                                                            type="email"
+                                                            name="email"
+                                                            value={formData.email}
+                                                            onChange={handleChange}
+                                                            placeholder="Email address (for job offer notifications)"
+                                                            className="w-full bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 rounded-xl py-3 px-4 text-sm font-bold outline-none border focus:border-primary/50 transition-colors"
+                                                        />
+                                                        <input 
+                                                            type="text"
+                                                            name="pin"
+                                                            value={formData.pin}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+                                                                setFormData(prev => ({ ...prev, pin: val }));
+                                                            }}
+                                                            maxLength={4}
+                                                            placeholder="4-digit PIN (to check status later) *"
+                                                            className="w-full bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 rounded-xl py-3 px-4 text-sm font-bold outline-none border focus:border-primary/50 transition-colors"
+                                                        />
+                                                        <p className="text-[9px] text-zinc-400 font-medium">⚠️ Remember your PIN! You'll need your Name + PIN to check application status & job offers.</p>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </label>
