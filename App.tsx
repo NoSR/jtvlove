@@ -201,11 +201,7 @@ const Navigation = () => {
             </div>
 
             <Link to="/mypage" className={`text-sm font-bold transition-colors ${isActive('/mypage') ? 'text-primary' : 'hover:text-primary'}`}>마이페이지</Link>
-            <div className="flex gap-2">
-              <Link to="/admin/login" onClick={handleOwnerClick} className="text-[10px] font-black bg-zinc-100 dark:bg-white/5 px-3 py-1 rounded-full uppercase">업주용</Link>
-              <Link to="/cca-portal/login" className="text-[10px] font-black bg-primary/10 text-primary px-3 py-1 rounded-full uppercase tracking-tighter">CCA 전용</Link>
-              <Link to="/super-admin" className="text-[10px] font-black bg-red-500/10 text-red-600 px-3 py-1 rounded-full uppercase">관리자</Link>
-            </div>
+
 
             {user ? (
               <button onClick={handleLogout} className="ml-4 flex items-center gap-2 px-6 py-2 bg-red-500/10 text-red-500 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-lg hover:scale-105 active:scale-95 transition-all">
