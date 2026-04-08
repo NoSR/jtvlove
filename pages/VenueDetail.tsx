@@ -226,7 +226,9 @@ const VenueDetail: React.FC = () => {
                            About {venue.name}
                         </h3>
                         <p className="text-gray-600 dark:text-zinc-400 leading-relaxed font-medium whitespace-pre-wrap">
-                           {venue.introduction || venue.description || '업소 소개 정보가 아직 등록되지 않았습니다.'}
+                           {venue.introduction && venue.introduction !== 'null' ? venue.introduction : 
+                            venue.description && venue.description !== 'null' ? venue.description : 
+                            '업소 소개 정보가 아직 등록되지 않았습니다.'}
                         </p>
                      </div>
 
@@ -237,12 +239,24 @@ const VenueDetail: React.FC = () => {
                               Venue Gallery
                            </h3>
                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                              {venue.media.map((url: string, idx: number) => (
-                                 <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden group">
-                                    <img src={url} alt={`Gallery ${idx}`} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-500" />
-                                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                 </div>
-                              ))}
+                              {venue.media.map((item: any, idx: number) => {
+                                 const imageUrl = typeof item === 'string' ? item : (item.url || '');
+                                 if (!imageUrl) return null;
+                                 
+                                 return (
+                                    <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden group">
+                                       <img 
+                                          src={imageUrl} 
+                                          alt={`Gallery ${idx}`} 
+                                          className="w-full h-full object-cover group-hover:scale-110 transition-all duration-500" 
+                                          onError={(e) => {
+                                             (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400?text=No+Image';
+                                          }}
+                                       />
+                                       <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    </div>
+                                 );
+                              })}
                            </div>
                         </div>
                      )}
