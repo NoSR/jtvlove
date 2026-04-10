@@ -37,6 +37,7 @@ export const CCAS: CCA[] = [
   {
     id: 'c1',
     name: 'Yumi Kim',
+    nickname: 'yumi',
     venueId: 'v1',
     venueName: 'Grand Palace',
     rating: 4.9,
@@ -53,6 +54,7 @@ export const CCAS: CCA[] = [
   {
     id: 'c2',
     name: 'Sofia Park',
+    nickname: 'sofia',
     venueId: 'v1',
     venueName: 'Grand Palace',
     rating: 5.0,
@@ -69,6 +71,7 @@ export const CCAS: CCA[] = [
   {
     id: 'c3',
     name: 'Maria Luna',
+    nickname: 'maria',
     venueId: 'v1',
     venueName: 'Grand Palace',
     rating: 4.9,

@@ -23,8 +23,12 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
       let bindings: any[] = [];
       
       if (ccaId) {
-        query += " WHERE cca_id = ?";
-        bindings.push(ccaId);
+        query = `
+          SELECT g.* FROM gallery g
+          JOIN ccas c ON g.cca_id = c.id
+          WHERE c.id = ? OR c.nickname = ?
+        `;
+        bindings.push(ccaId, ccaId);
       } else if (id) {
         query += " WHERE id = ?";
         bindings.push(id);

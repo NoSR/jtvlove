@@ -192,7 +192,8 @@ export const apiService = {
       return await response.json();
     } catch (error) {
       console.error('getCCAById error:', error);
-      return CCAS.find(c => c.id === id || c.nickname === id) || null;
+      const cleanId = id.startsWith('@') ? id.substring(1) : id;
+      return CCAS.find(c => c.id === cleanId || (c.nickname && c.nickname.toLowerCase() === cleanId.toLowerCase())) || null;
     }
   },
 

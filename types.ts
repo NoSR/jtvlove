@@ -97,6 +97,7 @@ export interface CCA {
     twitter?: string;
     threads?: string;
     telegram?: string;
+    kakao?: string;
   };
   experienceHistory?: CCAExperience[];
   maritalStatus?: string;

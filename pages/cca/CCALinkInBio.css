@@ -115,6 +115,33 @@
   margin-bottom: 24px;
 }
 
+/* SNS Icons */
+.lib-sns-links {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.lib-sns-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: transform 0.2s ease;
+}
+
+.lib-sns-icon:active {
+  transform: scale(0.9);
+}
+
+.lib-sns-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 /* Vanity Metrics */
 .lib-metrics {
   display: flex;
@@ -148,6 +175,104 @@
 .lib-badge-value {
   font-size: 16px;
   font-weight: 900;
+}
+
+/* Gallery Section */
+.lib-gallery {
+  padding: 32px 24px;
+  background: #050505;
+}
+
+.lib-section-title {
+  font-size: 18px;
+  font-weight: 900;
+  color: white;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.lib-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.lib-gallery-item {
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #111;
+}
+
+.lib-gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lib-no-data {
+  padding: 10px 24px 30px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Info Section */
+.lib-info-section {
+  padding: 0 24px;
+}
+
+.lib-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.lib-info-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lib-info-icon {
+  font-size: 20px !important;
+  color: #ff3b7e;
+}
+
+.lib-info-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.lib-info-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+}
+
+.lib-info-value {
+  font-size: 14px;
+  font-weight: 800;
+  color: white;
+}
+
+.lib-description {
+  font-size: 15px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 400;
+  margin-bottom: 32px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+  padding: 20px;
+  border-radius: 16px;
 }
 
 /* Sticky CTA */

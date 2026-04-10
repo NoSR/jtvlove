@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { apiService } from '../../services/apiService';
-import { CCA } from '../../types';
+import { CCA, MediaItem } from '../../types';
 import './CCALinkInBio.css';
 
 const CCALinkInBio: React.FC = () => {
@@ -9,27 +9,31 @@ const CCALinkInBio: React.FC = () => {
   const username = params.username;
   
   const [cca, setCca] = useState<CCA | null>(null);
+  const [gallery, setGallery] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
-    const fetchCca = async () => {
+    const fetchData = async () => {
       if (username) {
         setLoading(true);
         try {
-          const data = await apiService.getCCAByNickname(username);
-          setCca(data);
+          // Both CCA info and Gallery can be fetched using the nickname/username
+          const [ccaData, galleryData] = await Promise.all([
+            apiService.getCCAByNickname(username),
+            apiService.getGallery(username) 
+          ]);
+          
+          setCca(ccaData);
+          setGallery(Array.isArray(galleryData) ? galleryData : []);
         } catch (err) {
-          console.error("Fetch CCA error:", err);
-          setCca(null);
+          console.error("Fetch data error:", err);
         } finally {
           setLoading(false);
         }
-      } else {
-        setLoading(false);
       }
     };
-    fetchCca();
+    fetchData();
   }, [username]);
 
   const handleCopyLink = () => {
@@ -114,8 +118,109 @@ const CCALinkInBio: React.FC = () => {
                 <span className="lib-badge-value">{(cca.likesCount || 0).toLocaleString()}</span>
               </div>
             </div>
+
+            {/* SNS Icons */}
+            {cca.sns && (
+              <div className="lib-sns-links">
+                {Object.entries(cca.sns).map(([platform, handle]) => {
+                  if (!handle) return null;
+                  
+                  let iconUrl = '';
+                  let linkUrl = '';
+                  
+                  switch(platform.toLowerCase()) {
+                    case 'instagram':
+                      iconUrl = 'https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg';
+                      linkUrl = `https://instagram.com/${handle}`;
+                      break;
+                    case 'telegram':
+                      iconUrl = 'https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg';
+                      linkUrl = `https://t.me/${handle.replace('@', '')}`;
+                      break;
+                    case 'kakao':
+                      iconUrl = 'https://upload.wikimedia.org/wikipedia/commons/e/e3/KakaoTalk_logo.svg';
+                      linkUrl = handle.startsWith('http') ? handle : `https://open.kakao.com/o/${handle}`;
+                      break;
+                    case 'facebook':
+                      iconUrl = 'https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282013%29.svg';
+                      linkUrl = handle.startsWith('http') ? handle : `https://facebook.com/${handle}`;
+                      break;
+                    case 'tiktok':
+                      iconUrl = 'https://upload.wikimedia.org/wikipedia/en/a/a9/TikTok_logo.svg';
+                      linkUrl = `https://tiktok.com/@${handle.replace('@', '')}`;
+                      break;
+                    default:
+                      // Fallback icon or hide
+                      return null;
+                  }
+                  
+                  return (
+                    <a key={platform} href={linkUrl} target="_blank" rel="noreferrer" className="lib-sns-icon">
+                      <img src={iconUrl} alt={platform} />
+                    </a>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Gallery Section */}
+        {gallery.length > 0 ? (
+          <div className="lib-gallery">
+            <h3 className="lib-section-title">Photo Gallery</h3>
+            <div className="lib-gallery-grid">
+              {gallery.map((item: MediaItem, idx: number) => (
+                <div key={idx} className="lib-gallery-item">
+                  <img src={item.url} alt={`Gallery ${idx}`} />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="lib-no-data">
+            <p>아직 등록된 갤러리 사진이 없습니다.</p>
+          </div>
+        )}
+
+        {/* Info Section */}
+        <div className="lib-info-section">
+          <h3 className="lib-section-title">About Me</h3>
+          <div className="lib-info-grid">
+            {cca.mbti && (
+              <div className="lib-info-card">
+                <span className="lib-info-icon material-symbols-outlined">psychology</span>
+                <div className="lib-info-content">
+                  <span className="lib-info-label">MBTI</span>
+                  <span className="lib-info-value">{cca.mbti}</span>
+                </div>
+              </div>
+            )}
+            {cca.zodiac && (
+              <div className="lib-info-card">
+                <span className="lib-info-icon material-symbols-outlined">auto_awesome</span>
+                <div className="lib-info-content">
+                  <span className="lib-info-label">Zodiac</span>
+                  <span className="lib-info-value">{cca.zodiac}</span>
+                </div>
+              </div>
+            )}
+            {cca.height && (
+              <div className="lib-info-card">
+                <span className="lib-info-icon material-symbols-outlined">height</span>
+                <div className="lib-info-content">
+                  <span className="lib-info-label">Height</span>
+                  <span className="lib-info-value">{cca.height}</span>
+                </div>
+              </div>
+            )}
+          </div>
+          {cca.description && (
+            <p className="lib-description">{cca.description}</p>
+          )}
+        </div>
+
+        <div style={{ paddingBottom: '120px' }}></div>
 
         {/* Sticky CTA */}
         <div className="lib-cta-container">
