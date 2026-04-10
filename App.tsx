@@ -9,6 +9,7 @@ import CCAList from './pages/CCAList';
 import CCAProfile from './pages/CCAProfile';
 import Community from './pages/Community';
 import PostDetail from './pages/PostDetail';
+import CCALinkInBio from './pages/cca/CCALinkInBio';
 
 import MyPage from './pages/MyPage';
 import Login from './pages/Login';
@@ -301,6 +302,7 @@ const App: React.FC = () => {
         <Navigation />
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/@:username" element={<CCALinkInBio />} />
           <Route path="/venues" element={<VenueList />} />
           <Route path="/venues/:id" element={<VenueDetail />} />
           <Route path="/ccas" element={<CCAList />} />

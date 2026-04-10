@@ -599,6 +599,16 @@ const SuperPartners: React.FC = () => {
                                     <button onClick={() => handleOpenHistory(item)} className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-600 transition-all flex items-center gap-2">
                                        <span className="material-symbols-outlined text-xs">history</span> History
                                     </button>
+                                    {activeTab === 'ccas' && (
+                                       <a 
+                                          href={`/#/@${item.nickname || item.id}`} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="px-4 py-2 bg-pink-600/10 text-pink-500 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-pink-600 hover:text-white transition-all flex items-center gap-2 border border-pink-500/20"
+                                       >
+                                          <span className="material-symbols-outlined text-xs">rocket_launch</span> Profile
+                                       </a>
+                                    )}
                                     <button onClick={() => handleOpenDetail(item)} className="px-4 py-2 bg-red-600/10 text-red-500 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-2 border border-red-500/20">
                                        <span className="material-symbols-outlined text-xs">settings</span> Detail
                                     </button>

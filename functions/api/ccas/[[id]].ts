@@ -50,8 +50,10 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
       let queryParams: any[] = [];
 
       if (id) {
-        query += " WHERE c.id = ?";
-        queryParams.push(id);
+        // Check if id is a UUID/Internal ID or a nickname (non-canonical handles start with @ or are strings)
+        // For simplicity, we search by both id and nickname if it matches
+        query += " WHERE c.id = ? OR c.nickname = ?";
+        queryParams.push(id, id.startsWith('@') ? id.substring(1) : id);
         const result = await env.DB.prepare(query).bind(...queryParams).first();
 
         if (!result) return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });

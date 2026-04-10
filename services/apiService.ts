@@ -192,8 +192,13 @@ export const apiService = {
       return await response.json();
     } catch (error) {
       console.error('getCCAById error:', error);
-      return CCAS.find(c => c.id === id) || null;
+      return CCAS.find(c => c.id === id || c.nickname === id) || null;
     }
+  },
+
+  async getCCAByNickname(nickname: string): Promise<CCA | null> {
+    const cleanNickname = nickname.startsWith('@') ? nickname.substring(1) : nickname;
+    return this.getCCAById(cleanNickname);
   },
 
   async updateCCAProfile(id: string, data: Partial<CCA> & { password?: string }): Promise<{ success: boolean; error?: string }> {
