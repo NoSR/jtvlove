@@ -43,7 +43,7 @@ export interface Venue {
 }
 
 export type CCAStatus = 'active' | 'absent' | 'off' | 'resigned' | 'late' | 'applicant' | 'inactive';
-export type CCAGrade = 'ACE' | 'PRO' | 'CUTE';
+export type CCAGrade = 'STAR' | 'ACE' | 'PRO' | 'RISING' | 'NEW' | 'CUTE';
 export type CustomerGrade = 'VIP' | 'EXCELLENT' | 'GENERAL' | 'WARNING';
 
 export interface CCA {
@@ -106,6 +106,8 @@ export interface CCA {
   viewsCount?: number;
   likesCount?: number;
   postsCount?: number;
+  score?: number;
+  scoreUpdatedAt?: string;
 }
 
 export interface CCAExperience {

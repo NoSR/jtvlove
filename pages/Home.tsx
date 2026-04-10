@@ -5,8 +5,11 @@ import { CCA, Venue, HeroSection } from '../types';
 import { Helmet } from 'react-helmet-async';
 
 const GRADE_COLORS: Record<string, string> = {
-  ACE: 'bg-gradient-to-r from-amber-400 to-yellow-300 text-[#1b180d]',
-  PRO: 'bg-gradient-to-r from-sky-400 to-blue-500 text-white',
+  STAR: 'bg-gradient-to-r from-amber-400 to-yellow-300 text-[#1b180d]',
+  ACE: 'bg-gradient-to-r from-sky-400 to-blue-500 text-white',
+  PRO: 'bg-gradient-to-r from-orange-400 to-red-500 text-white',
+  RISING: 'bg-gradient-to-r from-emerald-400 to-green-500 text-white',
+  NEW: 'bg-zinc-600 text-white',
   CUTE: 'bg-gradient-to-r from-pink-400 to-rose-400 text-white',
 };
 
