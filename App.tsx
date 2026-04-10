@@ -287,46 +287,59 @@ const Navigation = () => {
   );
 };
 
-const LinkInBioRouteWrapper: React.FC = () => {
-  const { handle, username } = useParams();
-  const location = useLocation();
-  const finalUsername = username || (handle?.startsWith('@') ? handle.substring(1) : null) || (handle?.startsWith('%40') ? handle.substring(3) : null);
-  
-  if (finalUsername || location.pathname.includes('@') || location.hash.includes('@')) {
-    const extracted = finalUsername || 
-                    location.pathname.split('@')[1] || 
-                    location.hash.split('@')[1];
-    return <CCALinkInBio key={extracted} forcedUsername={extracted} />;
-  }
-  return <Navigate to="/" replace />;
-};
-
 const FooterWrapper = () => {
   const location = useLocation();
   const isSpecial = location.pathname.startsWith('/admin') ||
     location.pathname.startsWith('/cca-portal') ||
     location.pathname.startsWith('/super-admin') ||
     location.pathname.startsWith('/applicant') ||
-    location.pathname.includes('@') ||
-    location.pathname.includes('%40') ||
-    location.hash.includes('@') ||
-    location.hash.includes('%40') ||
     location.pathname === '/login' ||
     location.pathname === '/register';
   if (isSpecial) return null;
   return <Footer />;
 };
 
+// Detect Link-in-Bio from the raw hash BEFORE React Router processes anything
+const extractLinkInBioUsername = (): string | null => {
+  const hash = window.location.hash; // e.g. "#/@Kim" or "#/%40Kim"
+  if (!hash) return null;
+  
+  // Decode the hash first
+  const decoded = decodeURIComponent(hash);
+  
+  // Match patterns: #/@Username or #/@ Username
+  const match = decoded.match(/#\/?@(.+)/);
+  if (match && match[1]) {
+    return match[1].split('/')[0].split('?')[0]; // Strip trailing paths or query strings
+  }
+  return null;
+};
+
 const App: React.FC = () => {
+  const [linkInBioUser, setLinkInBioUser] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check on initial load
+    setLinkInBioUser(extractLinkInBioUsername());
+
+    // Listen for hash changes (user navigating)
+    const handleHashChange = () => {
+      setLinkInBioUser(extractLinkInBioUsername());
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // If URL hash contains @username, render Link-in-Bio directly, skip Router entirely
+  if (linkInBioUser) {
+    return <CCALinkInBio forcedUsername={linkInBioUser} />;
+  }
+
   return (
     <Router>
       <div className="min-h-screen">
         <Navigation />
         <Routes>
-          {/* Universal Link-in-bio detectors */}
-          <Route path="/@:username" element={<LinkInBioRouteWrapper />} />
-          <Route path="/%40:username" element={<LinkInBioRouteWrapper />} />
-          
           <Route path="/" element={<Home />} />
           <Route path="/venues" element={<VenueList />} />
           <Route path="/venues/:id" element={<VenueDetail />} />
