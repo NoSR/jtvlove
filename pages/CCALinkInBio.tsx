@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { apiService } from '../../services/apiService';
-import { CCA, MediaItem } from '../../types';
+import { apiService } from '../services/apiService';
+import { CCA, MediaItem } from '../types';
 import './CCALinkInBio.css';
 
 const CCALinkInBio: React.FC = () => {

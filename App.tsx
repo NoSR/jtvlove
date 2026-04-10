@@ -9,7 +9,7 @@ import CCAList from './pages/CCAList';
 import CCAProfile from './pages/CCAProfile';
 import Community from './pages/Community';
 import PostDetail from './pages/PostDetail';
-import CCALinkInBio from './pages/cca/CCALinkInBio';
+import CCALinkInBio from './pages/CCALinkInBio';
 
 import MyPage from './pages/MyPage';
 import Login from './pages/Login';
@@ -121,7 +121,11 @@ const Navigation = () => {
   const isSpecial = location.pathname.startsWith('/admin') ||
     location.pathname.startsWith('/cca-portal') ||
     location.pathname.startsWith('/super-admin') ||
-    location.pathname.startsWith('/applicant');
+    location.pathname.startsWith('/applicant') ||
+    location.pathname.includes('@') ||
+    location.pathname.includes('%40') ||
+    location.hash.includes('@') ||
+    location.hash.includes('%40');
   const isActive = (path: string) => location.pathname === path;
 
   if (isSpecial) return null;
@@ -289,6 +293,10 @@ const FooterWrapper = () => {
     location.pathname.startsWith('/cca-portal') ||
     location.pathname.startsWith('/super-admin') ||
     location.pathname.startsWith('/applicant') ||
+    location.pathname.includes('@') ||
+    location.pathname.includes('%40') ||
+    location.hash.includes('@') ||
+    location.hash.includes('%40') ||
     location.pathname === '/login' ||
     location.pathname === '/register';
   if (isSpecial) return null;
@@ -301,8 +309,10 @@ const App: React.FC = () => {
       <div className="min-h-screen">
         <Navigation />
         <Routes>
-          <Route path="/" element={<Home />} />
           <Route path="/@:username" element={<CCALinkInBio />} />
+          <Route path="/%40:username" element={<CCALinkInBio />} />
+          <Route path="/debug-path" element={<div style={{padding: '100px', background: 'white', color: 'black'}}>Path: {location.pathname}</div>} />
+          <Route path="/" element={<Home />} />
           <Route path="/venues" element={<VenueList />} />
           <Route path="/venues/:id" element={<VenueDetail />} />
           <Route path="/ccas" element={<CCAList />} />
@@ -343,6 +353,9 @@ const App: React.FC = () => {
               </SuperAdminLayout>
             </SuperAdminProtectedRoute>
           } />
+          
+          {/* Catch-all to Home */}
+          <Route path="*" element={<Home />} />
         </Routes>
         <FooterWrapper />
       </div>
