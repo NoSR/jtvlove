@@ -18,9 +18,10 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
   // GET: List all or single
   if (request.method === 'GET') {
     try {
-      // Auto-migrate schema to prevent 500 error if c.score doesn't exist yet
+      // Auto-migrate schema to prevent 500 error if columns don't exist yet
       try { await env.DB.prepare("ALTER TABLE ccas ADD COLUMN score INTEGER DEFAULT 50").run(); } catch(e) {}
       try { await env.DB.prepare("ALTER TABLE ccas ADD COLUMN score_updated_at TEXT").run(); } catch(e) {}
+      try { await env.DB.prepare("ALTER TABLE ccas ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP").run(); } catch(e) {}
 
       const getBusinessDate = () => {
         const now = new Date();
@@ -40,13 +41,13 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
         FROM ccas c 
         LEFT JOIN venues v ON c.venue_id = v.id
         LEFT JOIN (
-          SELECT * FROM cca_attendance 
-          WHERE (cca_id, check_in_at) IN (
-            SELECT cca_id, MAX(check_in_at) 
-            FROM cca_attendance 
-            WHERE status = 'checked_in'
-            GROUP BY cca_id
-          )
+           SELECT ca.* FROM cca_attendance ca
+           INNER JOIN (
+              SELECT cca_id, MAX(check_in_at) as max_check_in
+              FROM cca_attendance 
+              WHERE status = 'checked_in'
+              GROUP BY cca_id
+           ) latest ON ca.cca_id = latest.cca_id AND ca.check_in_at = latest.max_check_in
         ) a ON c.id = a.cca_id
       `;
       let queryParams: any[] = [];
@@ -98,9 +99,19 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
         queryParams.push(venueIdParam, venueIdParam);
       }
 
-      query += " ORDER BY c.score DESC NULLS LAST, c.created_at DESC";
+      const orderSql = " ORDER BY c.score DESC NULLS LAST, c.created_at DESC";
+      query += orderSql;
 
-      const { results } = await env.DB.prepare(query).bind(...queryParams).all();
+      let results;
+      try {
+        const res = await env.DB.prepare(query).bind(...queryParams).all();
+        results = res.results;
+      } catch (dbError: any) {
+        console.error("Query failed with ORDER BY, trying without:", dbError);
+        query = query.replace(orderSql, "");
+        const fallbackRes = await env.DB.prepare(query).bind(...queryParams).all();
+        results = fallbackRes.results;
+      }
 
       return new Response(JSON.stringify(results.map((r: any) => ({
         ...r,
