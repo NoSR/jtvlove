@@ -67,7 +67,7 @@
   height: 44px;
   border-radius: 50%;
   display: flex;
-  items-center;
+  align-items: center;
   justify-content: center;
   color: white;
   cursor: pointer;

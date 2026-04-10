@@ -5,7 +5,9 @@ import { CCA } from '../../types';
 import './CCALinkInBio.css';
 
 const CCALinkInBio: React.FC = () => {
-  const { username } = useParams<{ username: string }>();
+  const params = useParams();
+  const username = params.username;
+  
   const [cca, setCca] = useState<CCA | null>(null);
   const [loading, setLoading] = useState(true);
   const [showToast, setShowToast] = useState(false);
@@ -14,9 +16,16 @@ const CCALinkInBio: React.FC = () => {
     const fetchCca = async () => {
       if (username) {
         setLoading(true);
-        // We use the @username parameter
-        const data = await apiService.getCCAByNickname(username);
-        setCca(data);
+        try {
+          const data = await apiService.getCCAByNickname(username);
+          setCca(data);
+        } catch (err) {
+          console.error("Fetch CCA error:", err);
+          setCca(null);
+        } finally {
+          setLoading(false);
+        }
+      } else {
         setLoading(false);
       }
     };
@@ -28,12 +37,13 @@ const CCALinkInBio: React.FC = () => {
     navigator.clipboard.writeText(url).then(() => {
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
+    }).catch(err => {
+      console.error("Clipboard error:", err);
     });
   };
 
   const handleBooking = () => {
     if (cca) {
-      // User specified URL pattern: https://jtvstar.com/booking/[username]
       const bookingUrl = `https://jtvstar.com/booking/${cca.nickname || cca.id}`;
       window.open(bookingUrl, '_blank');
     }
@@ -107,7 +117,7 @@ const CCALinkInBio: React.FC = () => {
           </div>
         </div>
 
-        {/* Sticky CTA - Using visibility for better sticky feel if needed, but absolute in relative is fine for mobile */}
+        {/* Sticky CTA */}
         <div className="lib-cta-container">
           <button className="lib-cta-button" onClick={handleBooking}>
             나 지명하기

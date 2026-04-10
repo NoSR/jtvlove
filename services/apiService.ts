@@ -198,7 +198,7 @@ export const apiService = {
 
   async getCCAByNickname(nickname: string): Promise<CCA | null> {
     const cleanNickname = nickname.startsWith('@') ? nickname.substring(1) : nickname;
-    return this.getCCAById(cleanNickname);
+    return apiService.getCCAById(cleanNickname);
   },
 
   async updateCCAProfile(id: string, data: Partial<CCA> & { password?: string }): Promise<{ success: boolean; error?: string }> {
