@@ -81,6 +81,8 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
           viewsCount: result.views_count,
           likesCount: result.likes_count,
           postsCount: result.posts_count,
+          score: result.score,
+          scoreUpdatedAt: result.score_updated_at,
           isNew: result.is_new === 1
         }), {
           headers: { "Content-Type": "application/json" },
@@ -92,6 +94,8 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
         queryParams.push(venueIdParam, venueIdParam);
       }
 
+      query += " ORDER BY c.score DESC NULLS LAST, c.created_at DESC";
+
       const { results } = await env.DB.prepare(query).bind(...queryParams).all();
 
       return new Response(JSON.stringify(results.map((r: any) => ({
@@ -100,7 +104,9 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
         languages: r.languages ? JSON.parse(r.languages) : [],
         venueId: r.venue_id,
         sns: r.sns_links ? JSON.parse(r.sns_links) : {},
-        isNew: r.is_new === 1
+        isNew: r.is_new === 1,
+        score: r.score,
+        scoreUpdatedAt: r.score_updated_at
       }))), {
         headers: { "Content-Type": "application/json" },
       });

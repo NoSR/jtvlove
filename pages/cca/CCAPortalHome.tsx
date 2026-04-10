@@ -163,6 +163,12 @@ const CCAPortalHome: React.FC = () => {
                      </h2>
                      <div className="flex items-center gap-3 mt-2">
                         <span className="px-2.5 py-0.5 bg-primary/15 text-primary text-[10px] font-black rounded-full uppercase tracking-wider">{cca?.grade || 'PRO'}</span>
+                        {cca?.score !== undefined && (
+                           <span className="text-xs text-primary font-bold flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[14px]">stars</span>
+                              {cca.score} Points
+                           </span>
+                        )}
                         <span className="text-xs text-gray-400 font-medium">{cca?.venue_name || 'Venue'}</span>
                      </div>
                   </div>

@@ -437,6 +437,20 @@ export const apiService = {
     }
   },
 
+  async recalculateCCAScore(ccaId: string): Promise<{ success: boolean; newScore?: number; newGrade?: string; error?: string }> {
+    try {
+      const response = await fetch(`${API_BASE}/cca-score/recalculate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ccaId })
+      });
+      return await response.json();
+    } catch (error: any) {
+      console.error('recalculateCCAScore error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
   // Reservations
   async createReservation(data: any): Promise<boolean> {
     try {

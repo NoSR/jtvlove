@@ -59,6 +59,9 @@ const SuperPartners: React.FC = () => {
    const [newAdminEmail, setNewAdminEmail] = useState('');
    const [isResetting, setIsResetting] = useState(false);
 
+   // Score calculation state
+   const [isRecalculating, setIsRecalculating] = useState(false);
+
    useEffect(() => {
       loadData();
    }, [activeTab]);
@@ -77,6 +80,26 @@ const SuperPartners: React.FC = () => {
          console.error("Load data error", err);
       } finally {
          setLoading(false);
+      }
+   };
+
+   const handleRecalculateScores = async () => {
+      if (!window.confirm("Are you sure you want to recalculate scores for all CCAs? This might take a while depending on the number of CCAs.")) return;
+      
+      setIsRecalculating(true);
+      try {
+         const res = await apiService.recalculateCCAScore('all');
+         if (res.success) {
+            alert(`Score recalculation completed!`);
+            loadData();
+         } else {
+            alert(`Failed: ${res.error}`);
+         }
+      } catch (err) {
+         console.error(err);
+         alert("Error during recalculation.");
+      } finally {
+         setIsRecalculating(false);
       }
    };
 
@@ -535,6 +558,12 @@ const SuperPartners: React.FC = () => {
                <button onClick={handleAddNew} className="bg-white text-black px-6 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-2">
                   <span className="material-symbols-outlined text-sm">add</span> Register New
                </button>
+               {activeTab === 'ccas' && (
+                  <button onClick={handleRecalculateScores} disabled={isRecalculating} className="bg-purple-600/20 border border-purple-500/30 text-purple-400 px-6 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-purple-600 hover:text-white transition-all flex items-center gap-2 disabled:opacity-50">
+                     <span className="material-symbols-outlined text-sm">{isRecalculating ? 'sync' : 'calculate'}</span> 
+                     {isRecalculating ? 'Calculating...' : 'Recalculate Scores'}
+                  </button>
+               )}
             </div>
             <div className="flex gap-4">
                <div className="bg-zinc-900 px-6 py-3 rounded-xl border border-white/5 flex items-center gap-4">
@@ -559,7 +588,7 @@ const SuperPartners: React.FC = () => {
                            <th className="px-8 py-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">Region</th>
                            <th className="px-8 py-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">Name</th>
                            {activeTab === 'ccas' && <th className="px-8 py-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">Venue</th>}
-                           {activeTab === 'ccas' && <th className="px-8 py-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">Info</th>}
+                           {activeTab === 'ccas' && <th className="px-8 py-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">Info / Score</th>}
                            <th className="px-8 py-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">Res.</th>
                            {activeTab === 'venues' && <th className="px-8 py-6 text-[10px] font-black text-gray-500 uppercase tracking-widest">CCAs</th>}
                            <th className="px-8 py-6 text-[10px] font-black text-gray-500 uppercase tracking-widest text-right">Actions</th>
@@ -582,9 +611,12 @@ const SuperPartners: React.FC = () => {
                               {activeTab === 'ccas' && <td className="px-8 py-6 text-xs font-bold text-gray-400">{item.venue_name || '-'}</td>}
                               {activeTab === 'ccas' && (
                                  <td className="px-8 py-6">
-                                    <div className="flex flex-col gap-1">
-                                       <span className="text-[10px] font-bold text-gray-400">{item.age || '-'}세</span>
-                                       <span className="text-[10px] font-bold text-[#ffd700]">{formatBodySize(item.height)}</span>
+                                    <div className="flex flex-col gap-1.5">
+                                       <span className="text-[10px] font-bold text-gray-400">{item.age || '-'}세 · {formatBodySize(item.height)}</span>
+                                       <span className="inline-flex max-w-max items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/40 border border-white/5">
+                                          <span className="text-[9px] font-black text-primary uppercase">{item.grade || 'NEW'}</span>
+                                          <span className="text-[9px] font-bold text-gray-300">{item.score || 0} pts</span>
+                                       </span>
                                     </div>
                                  </td>
                               )}
