@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Link, useLocation, useNavigate, Navigate, useParams } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { apiService } from './services/apiService';
 import Home from './pages/Home';
@@ -287,6 +287,20 @@ const Navigation = () => {
   );
 };
 
+const LinkInBioRouteWrapper: React.FC = () => {
+  const { handle, username } = useParams();
+  const location = useLocation();
+  const finalUsername = username || (handle?.startsWith('@') ? handle.substring(1) : null) || (handle?.startsWith('%40') ? handle.substring(3) : null);
+  
+  if (finalUsername || location.pathname.includes('@') || location.hash.includes('@')) {
+    const extracted = finalUsername || 
+                    location.pathname.split('@')[1] || 
+                    location.hash.split('@')[1];
+    return <CCALinkInBio key={extracted} forcedUsername={extracted} />;
+  }
+  return <Navigate to="/" replace />;
+};
+
 const FooterWrapper = () => {
   const location = useLocation();
   const isSpecial = location.pathname.startsWith('/admin') ||
@@ -309,9 +323,10 @@ const App: React.FC = () => {
       <div className="min-h-screen">
         <Navigation />
         <Routes>
-          <Route path="/@:username" element={<CCALinkInBio />} />
-          <Route path="/%40:username" element={<CCALinkInBio />} />
-          <Route path="/debug-path" element={<div style={{padding: '100px', background: 'white', color: 'black'}}>Path: {location.pathname}</div>} />
+          {/* Universal Link-in-bio detectors */}
+          <Route path="/@:username" element={<LinkInBioRouteWrapper />} />
+          <Route path="/%40:username" element={<LinkInBioRouteWrapper />} />
+          
           <Route path="/" element={<Home />} />
           <Route path="/venues" element={<VenueList />} />
           <Route path="/venues/:id" element={<VenueDetail />} />

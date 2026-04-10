@@ -4,9 +4,13 @@ import { apiService } from '../services/apiService';
 import { CCA, MediaItem } from '../types';
 import './CCALinkInBio.css';
 
-const CCALinkInBio: React.FC = () => {
+interface CCALinkInBioProps {
+  forcedUsername?: string;
+}
+
+const CCALinkInBio: React.FC<CCALinkInBioProps> = ({ forcedUsername }) => {
   const params = useParams();
-  const username = params.username;
+  const username = forcedUsername || params.username;
   
   const [cca, setCca] = useState<CCA | null>(null);
   const [gallery, setGallery] = useState<MediaItem[]>([]);
