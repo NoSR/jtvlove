@@ -18,6 +18,10 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
   // GET: List all or single
   if (request.method === 'GET') {
     try {
+      // Auto-migrate schema to prevent 500 error if c.score doesn't exist yet
+      try { await env.DB.prepare("ALTER TABLE ccas ADD COLUMN score INTEGER DEFAULT 50").run(); } catch(e) {}
+      try { await env.DB.prepare("ALTER TABLE ccas ADD COLUMN score_updated_at TEXT").run(); } catch(e) {}
+
       const getBusinessDate = () => {
         const now = new Date();
         const hour = now.getUTCHours() + 8; // Manila Time
