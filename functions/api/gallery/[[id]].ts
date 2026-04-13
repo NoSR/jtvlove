@@ -25,14 +25,17 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
       const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 50);
       const offset = (page - 1) * limit;
 
-      const userId = url.searchParams.get('userId');
+      const userId = url.searchParams.get('userId') || '';
 
       // ─── FEED MODE: All CCAs' gallery with Popularity & Follows ───
       if (feedMode === 'true') {
         const query = `
           SELECT 
-            g.id, g.type, g.url, g.caption, g.likes, g.shares, 
-            g.comments_count, g.created_at,
+            g.id, g.type, g.url, g.caption, 
+            COALESCE(g.likes, 0) as likes, 
+            COALESCE(g.shares, 0) as shares, 
+            COALESCE(g.comments_count, 0) as comments_count, 
+            g.created_at,
             g.cca_id,
             c.name as cca_name,
             c.nickname as cca_nickname,
@@ -41,20 +44,21 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
             c.score as cca_score,
             v.name as venue_name,
             v.region as venue_region,
-            (COALESCE(g.likes, 0) * 3 + COALESCE(g.comments_count, 0) * 5) as popularity_score,
-            ? as req_user_id
+            (CASE WHEN f.id IS NOT NULL THEN 1 ELSE 0 END) as is_followed,
+            (COALESCE(g.likes, 0) * 3 + COALESCE(g.comments_count, 0) * 5) as popularity_score
           FROM gallery g
           JOIN ccas c ON g.cca_id = c.id
           LEFT JOIN venues v ON c.venue_id = v.id
+          LEFT JOIN cca_follows f ON f.cca_id = c.id AND f.user_id = ?
           WHERE c.status = 'active'
           ORDER BY 
-            (SELECT COUNT(*) FROM cca_follows f WHERE f.cca_id = c.id AND f.user_id = req_user_id) DESC, 
+            is_followed DESC, 
             popularity_score DESC, 
             g.created_at DESC
           LIMIT ? OFFSET ?
         `;
 
-        const { results } = await env.DB.prepare(query).bind(userId || '', limit, offset).all();
+        const { results } = await env.DB.prepare(query).bind(userId, limit, offset).all();
 
         // Get total count for pagination
         const countResult = await env.DB.prepare(
