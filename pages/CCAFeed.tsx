@@ -121,8 +121,10 @@ const CCAFeed: React.FC = () => {
 
       if (append) {
         setFeedItems(prev => [...prev, ...items]);
+        setExploreItems(prev => [...prev, ...items]);
       } else {
         setFeedItems(items);
+        setExploreItems(items);
       }
       setHasMore(data.hasMore);
 
@@ -176,18 +178,18 @@ const CCAFeed: React.FC = () => {
           return 0;
         });
       setLiveCCAs(stories);
-
-      // For explore grid, use all feed items
-      setExploreItems(feedItems);
     } catch (err) {
       console.error('Stories load error:', err);
     }
-  }, [feedItems]);
+  }, []);
 
   useEffect(() => {
     loadFeed(1);
+  }, [loadFeed]);
+
+  useEffect(() => {
     loadStories();
-  }, [loadFeed, loadStories]);
+  }, [loadStories]);
 
   // ─── Infinite Scroll ───
   const loadMoreRef = useRef<HTMLDivElement>(null);
