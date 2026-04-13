@@ -58,14 +58,53 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
           LIMIT ? OFFSET ?
         `;
 
-        const { results } = await env.DB.prepare(query).bind(userId, limit, offset).all();
+        let results = [];
+        let totalCount = 0;
 
-        // Get total count for pagination
-        const countResult = await env.DB.prepare(
-          `SELECT COUNT(*) as total FROM gallery g 
-           JOIN ccas c ON g.cca_id = c.id 
-           WHERE c.status = 'active'`
-        ).first();
+        try {
+          // Attempt the main query including the new cca_follows table
+          const res = await env.DB.prepare(query).bind(userId, limit, offset).all();
+          results = res.results;
+          
+          const countResult = await env.DB.prepare(
+            `SELECT COUNT(*) as total FROM gallery g JOIN ccas c ON g.cca_id = c.id WHERE c.status = 'active'`
+          ).first();
+          totalCount = countResult?.total || 0;
+        } catch (dbError: any) {
+          console.warn('DB Error (likely missing cca_follows table), running fallback query...', dbError);
+          // FALLBACK: Run the original query without cca_follows if the new table isn't migrated yet
+          const fallbackQuery = `
+            SELECT 
+              g.id, g.type, g.url, g.caption, 
+              COALESCE(g.likes, 0) as likes, 
+              COALESCE(g.shares, 0) as shares, 
+              COALESCE(g.comments_count, 0) as comments_count, 
+              g.created_at,
+              g.cca_id,
+              c.name as cca_name,
+              c.nickname as cca_nickname,
+              c.image as cca_image,
+              c.grade as cca_grade,
+              c.score as cca_score,
+              v.name as venue_name,
+              v.region as venue_region,
+              0 as is_followed,
+              (COALESCE(g.likes, 0) * 3 + COALESCE(g.comments_count, 0) * 5) as popularity_score
+            FROM gallery g
+            JOIN ccas c ON g.cca_id = c.id
+            LEFT JOIN venues v ON c.venue_id = v.id
+            WHERE c.status = 'active'
+            ORDER BY popularity_score DESC, g.created_at DESC
+            LIMIT ? OFFSET ?
+          `;
+          const res = await env.DB.prepare(fallbackQuery).bind(limit, offset).all();
+          results = res.results;
+          
+          const countResult = await env.DB.prepare(
+            `SELECT COUNT(*) as total FROM gallery g JOIN ccas c ON g.cca_id = c.id WHERE c.status = 'active'`
+          ).first();
+          totalCount = countResult?.total || 0;
+        }
 
         return new Response(JSON.stringify({
           items: results.map((item: any) => ({
@@ -88,8 +127,8 @@ export const onRequest: PagesFunction<Env> = async (context: any) => {
           })),
           page,
           limit,
-          total: countResult?.total || 0,
-          hasMore: offset + limit < (countResult?.total || 0)
+          total: totalCount,
+          hasMore: offset + limit < totalCount
         }), { headers });
       }
 
