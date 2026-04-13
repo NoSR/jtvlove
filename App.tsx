@@ -10,6 +10,7 @@ import CCAProfile from './pages/CCAProfile';
 import Community from './pages/Community';
 import PostDetail from './pages/PostDetail';
 import CCALinkInBio from './pages/CCALinkInBio';
+import CCAFeed from './pages/CCAFeed';
 
 import MyPage from './pages/MyPage';
 import Login from './pages/Login';
@@ -122,6 +123,7 @@ const Navigation = () => {
     location.pathname.startsWith('/cca-portal') ||
     location.pathname.startsWith('/super-admin') ||
     location.pathname.startsWith('/applicant') ||
+    location.pathname.startsWith('/feed') ||
     location.pathname.includes('@') ||
     location.pathname.includes('%40') ||
     location.hash.includes('@') ||
@@ -293,6 +295,7 @@ const FooterWrapper = () => {
     location.pathname.startsWith('/cca-portal') ||
     location.pathname.startsWith('/super-admin') ||
     location.pathname.startsWith('/applicant') ||
+    location.pathname.startsWith('/feed') ||
     location.pathname === '/login' ||
     location.pathname === '/register';
   if (isSpecial) return null;
@@ -315,20 +318,34 @@ const extractLinkInBioUsername = (): string | null => {
   return null;
 };
 
+// Detect Feed mode from hash
+const isFeedMode = (): boolean => {
+  const hash = window.location.hash;
+  return hash === '#/feed' || hash.startsWith('#/feed?') || hash.startsWith('#/feed/');
+};
+
 const App: React.FC = () => {
   const [linkInBioUser, setLinkInBioUser] = useState<string | null>(null);
+  const [showFeed, setShowFeed] = useState(false);
 
   useEffect(() => {
     // Check on initial load
     setLinkInBioUser(extractLinkInBioUsername());
+    setShowFeed(isFeedMode());
 
     // Listen for hash changes (user navigating)
     const handleHashChange = () => {
       setLinkInBioUser(extractLinkInBioUsername());
+      setShowFeed(isFeedMode());
     };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
+
+  // If URL hash contains /feed, render Feed directly
+  if (showFeed) {
+    return <CCAFeed />;
+  }
 
   // If URL hash contains @username, render Link-in-Bio directly, skip Router entirely
   if (linkInBioUser) {

@@ -8,80 +8,99 @@ interface CCALinkInBioProps {
   forcedUsername?: string;
 }
 
-// Grade config for badge styling
-const GRADE_CONFIG: Record<string, { label: string; icon: string; className: string }> = {
-  STAR: { label: 'STAR', icon: '⭐', className: 'lib-grade-star' },
-  ACE: { label: 'ACE', icon: '💎', className: 'lib-grade-ace' },
-  PRO: { label: 'PRO', icon: '🔥', className: 'lib-grade-pro' },
-  RISING: { label: 'RISING', icon: '🌱', className: 'lib-grade-rising' },
-  NEW: { label: 'NEW', icon: '🆕', className: 'lib-grade-new' },
-  // Legacy support
-  CUTE: { label: 'CUTE', icon: '💕', className: 'lib-grade-rising' },
+// Grade config
+const GRADE_CONFIG: Record<string, { label: string; icon: string }> = {
+  STAR: { label: 'STAR', icon: '⭐' },
+  ACE: { label: 'ACE', icon: '💎' },
+  PRO: { label: 'PRO', icon: '🔥' },
+  RISING: { label: 'RISING', icon: '🌱' },
+  NEW: { label: 'NEW', icon: '🆕' },
+  CUTE: { label: 'CUTE', icon: '💕' },
 };
+
+function getVisitorId(): string {
+  let vid = localStorage.getItem('lib_visitor_id');
+  if (!vid) {
+    vid = 'v_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+    localStorage.setItem('lib_visitor_id', vid);
+  }
+  return vid;
+}
+
+function timeAgo(dateStr: string): string {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return 'just now';
+  if (diffMin < 60) return `${diffMin}m`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay < 7) return `${diffDay}d`;
+  return `${Math.floor(diffDay / 7)}w`;
+}
 
 const CCALinkInBio: React.FC<CCALinkInBioProps> = ({ forcedUsername }) => {
   const params = useParams();
   const username = forcedUsername || params.username;
-  
+
   const [cca, setCca] = useState<CCA | null>(null);
   const [gallery, setGallery] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
-  // Lightbox state
+  // Hearts
+  const [heartCount, setHeartCount] = useState(0);
+  const [isHearted, setIsHearted] = useState(false);
+
+  // Follow
+  const [isFollowing, setIsFollowing] = useState(false);
+
+  // Views
+  const [todayViews, setTodayViews] = useState(0);
+
+  // Lightbox
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [touchStartX, setTouchStartX] = useState(0);
 
-  // Heart state
-  const [heartCount, setHeartCount] = useState(0);
-  const [isHearted, setIsHearted] = useState(false);
-  const [heartAnimating, setHeartAnimating] = useState(false);
+  // Gallery tab
+  const [galleryTab, setGalleryTab] = useState<'grid' | 'info'>('grid');
 
-  // View count
-  const [todayViews, setTodayViews] = useState(0);
-
+  // ─── Fetch Data ───
   useEffect(() => {
     const fetchData = async () => {
-      if (username) {
-        setLoading(true);
-        try {
-          const [ccaData, galleryData] = await Promise.all([
-            apiService.getCCAByNickname(username),
-            apiService.getGallery(username) 
-          ]);
-          
-          setCca(ccaData);
-          setGallery(Array.isArray(galleryData) ? galleryData : []);
-
-          // Set initial heart/view counts from CCA data
-          if (ccaData) {
-            setHeartCount(ccaData.likesCount || 0);
-            setTodayViews(ccaData.viewsCount || 0);
-          }
-        } catch (err) {
-          console.error("Fetch data error:", err);
-        } finally {
-          setLoading(false);
+      if (!username) return;
+      setLoading(true);
+      try {
+        const [ccaData, galleryData] = await Promise.all([
+          apiService.getCCAByNickname(username),
+          apiService.getGallery(username)
+        ]);
+        setCca(ccaData);
+        setGallery(Array.isArray(galleryData) ? galleryData : []);
+        if (ccaData) {
+          setHeartCount(ccaData.likesCount || 0);
+          setTodayViews(ccaData.viewsCount || 0);
         }
+      } catch (err) {
+        console.error("Fetch data error:", err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
   }, [username]);
 
-  // Record profile view (with dedup)
+  // Record view
   useEffect(() => {
     if (!cca?.id) return;
     const key = `lib_view_${cca.id}`;
     const lastView = sessionStorage.getItem(key);
     const now = Date.now();
-    
-    // Only count if 30min since last view from this session
     if (lastView && now - parseInt(lastView) < 30 * 60 * 1000) return;
-    
     sessionStorage.setItem(key, String(now));
-    
-    // Fire-and-forget view recording
     fetch(`/api/cca-views`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -89,29 +108,27 @@ const CCALinkInBio: React.FC<CCALinkInBioProps> = ({ forcedUsername }) => {
     }).then(res => res.ok ? res.json() : null)
       .then(data => {
         if (data?.todayViews !== undefined) setTodayViews(data.todayViews);
-      })
-      .catch(() => {});
+      }).catch(() => { });
   }, [cca?.id]);
 
-  // Load heart status
+  // Load heart status and follow status
   useEffect(() => {
     if (!cca?.id) return;
     const userId = getVisitorId();
     apiService.getCCALikes(cca.id, userId).then(data => {
       setHeartCount(data.count || 0);
       setIsHearted(data.liked || false);
-    }).catch(() => {});
-  }, [cca?.id]);
+    }).catch(() => { });
 
-  // Generate or retrieve a stable visitor ID (anonymous)
-  function getVisitorId(): string {
-    let vid = localStorage.getItem('lib_visitor_id');
-    if (!vid) {
-      vid = 'v_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
-      localStorage.setItem('lib_visitor_id', vid);
+    // Also check follow status (requires a logged in user realistically but we can try if there's user context, or just skip if we must use actual users. I'll use localStorage user info if available, otherwise assume not followed)
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        apiService.checkCCAFollow(parsed.id, cca.id).then(res => setIsFollowing(res.isFollowing));
+      } catch (e) {}
     }
-    return vid;
-  }
+  }, [cca?.id]);
 
   const showToastMsg = (msg: string) => {
     setToastMessage(msg);
@@ -120,41 +137,55 @@ const CCALinkInBio: React.FC<CCALinkInBioProps> = ({ forcedUsername }) => {
   };
 
   const handleCopyLink = () => {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url).then(() => {
-      showToastMsg('링크가 복사되었어요! 프로필에 추가해 보세요 ✨');
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      showToastMsg('Link copied! ✨');
     }).catch(() => {
-      showToastMsg('링크 복사에 실패했습니다.');
+      showToastMsg('Failed to copy link.');
     });
   };
 
-  const handleBooking = () => {
-    if (cca) {
-      // Redirect to the main site's CCA profile page where the full booking flow exists
-      window.location.href = `https://jtvstar.com/#/ccas/${cca.id}`;
-    }
-  };
-
-  // ─── Heart ────────────────────────────────────
   const handleToggleHeart = async () => {
     if (!cca?.id) return;
-    
-    setHeartAnimating(true);
-    setTimeout(() => setHeartAnimating(false), 600);
-
     const visitorId = getVisitorId();
     try {
       const result = await apiService.toggleCCALike(cca.id, visitorId);
       setIsHearted(result.liked);
       setHeartCount(result.count);
     } catch {
-      // Optimistic toggle for offline/error
       setIsHearted(!isHearted);
       setHeartCount(prev => isHearted ? prev - 1 : prev + 1);
     }
   };
 
-  // ─── Lightbox ─────────────────────────────────
+  const handleBooking = () => {
+    if (cca) {
+      window.location.href = `https://jtvstar.com/#/ccas/${cca.id}`;
+    }
+  };
+
+  const handleFollowToggle = async () => {
+    if (!cca?.id) return;
+    const storedUser = localStorage.getItem('user');
+    if (!storedUser) {
+      showToastMsg('로그인이 필요합니다.');
+      return;
+    }
+    try {
+      const parsed = JSON.parse(storedUser);
+      setIsFollowing(!isFollowing); // Optimistic UI
+      const result = await apiService.toggleCCAFollow(parsed.id, cca.id);
+      setIsFollowing(result.isFollowing);
+      if (result.isFollowing) showToastMsg('팔로우했습니다!');
+    } catch {
+      setIsFollowing(!isFollowing); // Revert
+    }
+  };
+
+  const goToFeed = () => {
+    window.location.hash = '/feed';
+  };
+
+  // Lightbox controls
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
     document.body.style.overflow = 'hidden';
@@ -175,7 +206,6 @@ const CCALinkInBio: React.FC<CCALinkInBioProps> = ({ forcedUsername }) => {
     setLightboxIndex((lightboxIndex - 1 + gallery.length) % gallery.length);
   }, [lightboxIndex, gallery.length]);
 
-  // Keyboard navigation
   useEffect(() => {
     if (lightboxIndex === null) return;
     const handleKey = (e: KeyboardEvent) => {
@@ -187,10 +217,7 @@ const CCALinkInBio: React.FC<CCALinkInBioProps> = ({ forcedUsername }) => {
     return () => window.removeEventListener('keydown', handleKey);
   }, [lightboxIndex, goToNext, goToPrev]);
 
-  // Touch swipe handlers
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStartX(e.touches[0].clientX);
-  };
+  const handleTouchStart = (e: React.TouchEvent) => setTouchStartX(e.touches[0].clientX);
   const handleTouchEnd = (e: React.TouchEvent) => {
     const diff = touchStartX - e.changedTouches[0].clientX;
     if (Math.abs(diff) > 50) {
@@ -201,31 +228,32 @@ const CCALinkInBio: React.FC<CCALinkInBioProps> = ({ forcedUsername }) => {
 
   const gradeConfig = cca?.grade ? GRADE_CONFIG[cca.grade] || GRADE_CONFIG.NEW : GRADE_CONFIG.NEW;
 
-  // ─── Loading ──────────────────────────────────
+  // ─── Loading ───
   if (loading) {
     return (
       <div className="lib-wrapper">
-        <div className="lib-container skeleton">
-          <div className="lib-hero-skeleton"></div>
-          <div className="lib-content-skeleton">
-            <div className="skeleton-line-lg"></div>
-            <div className="skeleton-line-sm"></div>
-            <div className="skeleton-metrics">
-              <div className="skeleton-badge"></div>
-              <div className="skeleton-badge"></div>
-            </div>
-          </div>
+        <div className="lib-loading">
+          <div className="lib-loading-spinner"></div>
+          <span className="lib-loading-text">Loading Profile...</span>
         </div>
       </div>
     );
   }
 
+  // ─── Not Found ───
   if (!cca) {
     return (
       <div className="lib-wrapper">
         <div className="lib-error">
-          <span className="material-symbols-outlined" style={{ fontSize: '48px', marginBottom: '16px' }}>error</span>
-          <p>CCA를 찾을 수 없습니다.</p>
+          <span className="material-symbols-outlined" style={{ fontSize: 48 }}>person_off</span>
+          <p style={{ fontWeight: 800, fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.1em' }}>CCA not found</p>
+          <button onClick={goToFeed} style={{
+            marginTop: 12, padding: '10px 24px', background: '#eebd2b', color: '#1b180d',
+            borderRadius: 12, border: 'none', fontWeight: 800, fontSize: 12, cursor: 'pointer',
+            fontFamily: 'Manrope, sans-serif'
+          }}>
+            Go to Feed
+          </button>
         </div>
       </div>
     );
@@ -233,261 +261,293 @@ const CCALinkInBio: React.FC<CCALinkInBioProps> = ({ forcedUsername }) => {
 
   return (
     <div className="lib-wrapper">
-      <div className="lib-container">
-        {/* Hero Section */}
-        <div className="lib-hero">
-          <img 
-            src={cca.image || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1000'} 
-            alt={cca.name} 
-            className="lib-profile-img" 
-          />
-          <div className="lib-hero-dimmed"></div>
-          
-          {/* Top Actions */}
-          <div className="lib-top-actions">
-            <button className="lib-icon-btn" onClick={handleCopyLink} aria-label="Copy Link">
-              <span className="material-symbols-outlined">link</span>
-            </button>
+      {/* Header */}
+      <header className="lib-header">
+        <span className="lib-header-username">
+          {cca.nickname || cca.name}
+          <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#eebd2b' }}>verified</span>
+        </span>
+        <div className="lib-header-actions">
+          <button className="lib-header-btn" onClick={handleCopyLink} aria-label="Copy Link">
+            <span className="material-symbols-outlined" style={{ fontSize: 22 }}>share</span>
+          </button>
+          <button className="lib-header-btn" onClick={goToFeed} aria-label="Feed">
+            <span className="material-symbols-outlined" style={{ fontSize: 22 }}>grid_view</span>
+          </button>
+        </div>
+      </header>
+
+      {/* Profile Section */}
+      <section className="lib-profile">
+        <div className="lib-profile-row">
+          {/* Avatar */}
+          <div className="lib-profile-avatar-container">
+            <div className="lib-profile-avatar-ring">
+              <img
+                src={cca.image || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200'}
+                alt={cca.name}
+                className="lib-profile-avatar"
+              />
+            </div>
+            <span className={`lib-profile-avatar-badge ${cca.grade || 'NEW'}`}>
+              {gradeConfig.label}
+            </span>
           </div>
 
-          {/* Profile Info */}
-          <div className="lib-profile-info">
-            <h1 className="lib-name">{cca.nickname || cca.name}</h1>
-            <p className="lib-username">@{cca.nickname || cca.id}</p>
-            
-            {/* Grade Badge */}
-            <div className={`lib-grade-badge ${gradeConfig.className}`}>
-              <span>{gradeConfig.icon}</span>
-              <span>{gradeConfig.label}</span>
-              {cca.score !== undefined && <span className="lib-grade-score">{cca.score}</span>}
+          {/* Stats */}
+          <div className="lib-profile-stats">
+            <div className="lib-profile-stat">
+              <span className="lib-profile-stat-value">{gallery.length}</span>
+              <span className="lib-profile-stat-label">Posts</span>
             </div>
-
-            {/* Vanity Metrics */}
-            <div className="lib-metrics">
-              <div className="lib-badge">
-                <span className="lib-badge-label">Today Views</span>
-                <span className="lib-badge-value">{todayViews.toLocaleString()}</span>
-              </div>
-              <button 
-                className={`lib-badge highlight lib-heart-btn ${isHearted ? 'hearted' : ''} ${heartAnimating ? 'animating' : ''}`}
-                onClick={handleToggleHeart}
-              >
-                <span className="lib-badge-label">
-                  {isHearted ? '❤️' : '🤍'} Hearts
-                </span>
-                <span className="lib-badge-value">{heartCount.toLocaleString()}</span>
-              </button>
+            <button className="lib-profile-stat" onClick={handleToggleHeart} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontFamily: 'Manrope, sans-serif' }}>
+              <span className="lib-profile-stat-value" style={isHearted ? { color: '#ef4444' } : {}}>
+                {heartCount.toLocaleString()}
+              </span>
+              <span className="lib-profile-stat-label">{isHearted ? '❤️ Hearts' : 'Hearts'}</span>
+            </button>
+            <div className="lib-profile-stat">
+              <span className="lib-profile-stat-value">{todayViews.toLocaleString()}</span>
+              <span className="lib-profile-stat-label">Views</span>
             </div>
-
-            {/* SNS Icons */}
-            {cca.sns && (
-              <div className="lib-sns-links">
-                {Object.entries(cca.sns).map(([platform, handle]) => {
-                  if (!handle) return null;
-                  
-                  let iconClass = '';
-                  let linkUrl = '';
-                  
-                  switch(platform.toLowerCase()) {
-                    case 'instagram':
-                      iconClass = 'lib-sns-instagram';
-                      linkUrl = `https://instagram.com/${handle}`;
-                      break;
-                    case 'telegram':
-                      iconClass = 'lib-sns-telegram';
-                      linkUrl = `https://t.me/${(handle as string).replace('@', '')}`;
-                      break;
-                    case 'kakao':
-                      iconClass = 'lib-sns-kakao';
-                      linkUrl = (handle as string).startsWith('http') ? handle as string : `https://open.kakao.com/o/${handle}`;
-                      break;
-                    case 'facebook':
-                      iconClass = 'lib-sns-facebook';
-                      linkUrl = (handle as string).startsWith('http') ? handle as string : `https://facebook.com/${handle}`;
-                      break;
-                    case 'tiktok':
-                      iconClass = 'lib-sns-tiktok';
-                      linkUrl = `https://tiktok.com/@${(handle as string).replace('@', '')}`;
-                      break;
-                    default:
-                      return null;
-                  }
-                  
-                  return (
-                    <a key={platform} href={linkUrl} target="_blank" rel="noreferrer" className={`lib-sns-chip ${iconClass}`}>
-                      <span className="lib-sns-name">{platform}</span>
-                    </a>
-                  );
-                })}
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Gallery Section */}
-        <div className="lib-gallery">
-          <h3 className="lib-section-title">
-            <span className="material-symbols-outlined">photo_library</span>
-            Photo Gallery
-            <span className="lib-gallery-count">{gallery.length}</span>
-          </h3>
-          {gallery.length > 0 ? (
-            <div className="lib-gallery-grid">
-              {gallery.map((item: MediaItem, idx: number) => (
-                <div 
-                  key={item.id || idx} 
-                  className="lib-gallery-item"
-                  onClick={() => openLightbox(idx)}
-                >
-                  <img src={item.url} alt={item.caption || `Photo ${idx + 1}`} loading="lazy" />
-                  <div className="lib-gallery-overlay">
-                    <span className="material-symbols-outlined">zoom_in</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="lib-no-data">
-              <span className="material-symbols-outlined">add_photo_alternate</span>
-              <p>갤러리를 준비 중입니다 ✨</p>
-            </div>
+        {/* Name & Bio */}
+        <div className="lib-profile-name">{cca.nickname || cca.name}</div>
+        <div className="lib-profile-venue">
+          <span className="material-symbols-outlined" style={{ fontSize: 13, color: '#eebd2b' }}>location_on</span>
+          {(cca as any).venueName || 'Venue'}
+          {cca.score !== undefined && (
+            <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 900, color: '#eebd2b' }}>
+              Score: {cca.score}
+            </span>
+          )}
+        </div>
+        {(cca.description || cca.oneLineStory) && (
+          <div className="lib-profile-bio">
+            {cca.description || cca.oneLineStory}
+          </div>
+        )}
+
+        {/* Info Chips */}
+        <div className="lib-profile-info-chips">
+          {cca.mbti && (
+            <span className="lib-profile-chip">
+              <span className="material-symbols-outlined">psychology</span>
+              {cca.mbti}
+            </span>
+          )}
+          {cca.zodiac && (
+            <span className="lib-profile-chip">
+              <span className="material-symbols-outlined">auto_awesome</span>
+              {cca.zodiac}
+            </span>
+          )}
+          {cca.height && (
+            <span className="lib-profile-chip">
+              <span className="material-symbols-outlined">height</span>
+              {cca.height}
+            </span>
+          )}
+          {cca.languages && cca.languages.length > 0 && (
+            <span className="lib-profile-chip">
+              <span className="material-symbols-outlined">translate</span>
+              {cca.languages.join(', ')}
+            </span>
           )}
         </div>
 
-        {/* Info Section */}
-        <div className="lib-info-section">
-          <h3 className="lib-section-title">
-            <span className="material-symbols-outlined">person</span>
-            About Me
-          </h3>
-          <div className="lib-info-grid">
-            {cca.mbti && (
-              <div className="lib-info-card">
-                <span className="lib-info-icon material-symbols-outlined">psychology</span>
-                <div className="lib-info-content">
-                  <span className="lib-info-label">MBTI</span>
-                  <span className="lib-info-value">{cca.mbti}</span>
+        {/* Action Buttons */}
+        <div className="lib-profile-actions">
+          <button 
+            className={`lib-profile-action-btn ${isFollowing ? 'secondary' : 'primary'}`} 
+            onClick={handleFollowToggle}
+            style={!isFollowing ? { background: '#eebd2b', color: '#1b180d' } : {}}
+          >
+            <span className="material-symbols-outlined">{isFollowing ? 'person_remove' : 'person_add'}</span>
+            {isFollowing ? 'Following' : 'Follow'}
+          </button>
+          <button className="lib-profile-action-btn secondary" onClick={handleBooking}>
+            <span className="material-symbols-outlined">calendar_month</span>
+            Request
+          </button>
+          <button className="lib-profile-action-btn secondary" onClick={() => {
+            if (cca) window.location.href = `https://jtvstar.com/#/ccas/${cca.id}`;
+          }}>
+            <span className="material-symbols-outlined">badge</span>
+            Full Profile
+          </button>
+        </div>
+      </section>
+
+      {/* Gallery Tabs */}
+      <div className="lib-gallery-tabs">
+        <button
+          className={`lib-gallery-tab ${galleryTab === 'grid' ? 'active' : ''}`}
+          onClick={() => setGalleryTab('grid')}
+        >
+          <span className="material-symbols-outlined">grid_on</span>
+        </button>
+        <button
+          className={`lib-gallery-tab ${galleryTab === 'info' ? 'active' : ''}`}
+          onClick={() => setGalleryTab('info')}
+        >
+          <span className="material-symbols-outlined">person</span>
+        </button>
+      </div>
+
+      {/* Gallery Grid or Info */}
+      {galleryTab === 'grid' ? (
+        gallery.length > 0 ? (
+          <div className="lib-gallery-grid">
+            {gallery.map((item, idx) => (
+              <div
+                key={item.id || idx}
+                className="lib-gallery-item"
+                onClick={() => openLightbox(idx)}
+              >
+                <img src={item.url} alt={item.caption || ''} loading="lazy" />
+                {item.type === 'video' && (
+                  <div className="lib-gallery-video-badge">
+                    <span className="material-symbols-outlined">play_circle</span>
+                  </div>
+                )}
+                <div className="lib-gallery-item-overlay">
+                  <span>
+                    <span className="material-symbols-outlined" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}>favorite</span>
+                    {item.likes || 0}
+                  </span>
+                  <span>
+                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>chat_bubble</span>
+                    {item.commentsCount || 0}
+                  </span>
                 </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="lib-gallery-empty">
+            <span className="material-symbols-outlined">add_photo_alternate</span>
+            <p>No posts yet</p>
+          </div>
+        )
+      ) : (
+        /* Info Tab */
+        <div style={{ padding: '24px 20px 100px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {cca.mbti && (
+              <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: '16px', textAlign: 'center' }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', marginBottom: 4 }}>MBTI</div>
+                <div style={{ fontSize: 18, fontWeight: 900 }}>{cca.mbti}</div>
               </div>
             )}
             {cca.zodiac && (
-              <div className="lib-info-card">
-                <span className="lib-info-icon material-symbols-outlined">auto_awesome</span>
-                <div className="lib-info-content">
-                  <span className="lib-info-label">Zodiac</span>
-                  <span className="lib-info-value">{cca.zodiac}</span>
-                </div>
+              <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: '16px', textAlign: 'center' }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', marginBottom: 4 }}>Zodiac</div>
+                <div style={{ fontSize: 18, fontWeight: 900 }}>{cca.zodiac}</div>
               </div>
             )}
             {cca.height && (
-              <div className="lib-info-card">
-                <span className="lib-info-icon material-symbols-outlined">height</span>
-                <div className="lib-info-content">
-                  <span className="lib-info-label">Height</span>
-                  <span className="lib-info-value">{cca.height}</span>
-                </div>
+              <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: '16px', textAlign: 'center' }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', marginBottom: 4 }}>Height</div>
+                <div style={{ fontSize: 18, fontWeight: 900 }}>{cca.height}</div>
               </div>
             )}
             {cca.languages && cca.languages.length > 0 && (
-              <div className="lib-info-card">
-                <span className="lib-info-icon material-symbols-outlined">translate</span>
-                <div className="lib-info-content">
-                  <span className="lib-info-label">Languages</span>
-                  <span className="lib-info-value">{cca.languages.join(', ')}</span>
-                </div>
+              <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: '16px', textAlign: 'center' }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', marginBottom: 4 }}>Languages</div>
+                <div style={{ fontSize: 14, fontWeight: 900 }}>{cca.languages.join(', ')}</div>
+              </div>
+            )}
+            {cca.drinking && (
+              <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: '16px', textAlign: 'center' }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', marginBottom: 4 }}>Drinking</div>
+                <div style={{ fontSize: 14, fontWeight: 900 }}>{cca.drinking}</div>
+              </div>
+            )}
+            {cca.smoking && (
+              <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: '16px', textAlign: 'center' }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', marginBottom: 4 }}>Smoking</div>
+                <div style={{ fontSize: 14, fontWeight: 900 }}>{cca.smoking}</div>
               </div>
             )}
           </div>
-          {cca.description && (
-            <p className="lib-description">"{cca.description}"</p>
-          )}
-          {cca.oneLineStory && !cca.description && (
-            <p className="lib-description">"{cca.oneLineStory}"</p>
-          )}
         </div>
+      )}
 
-        <div style={{ paddingBottom: '120px' }}></div>
+      {/* Bottom padding for fixed footer */}
+      <div style={{ paddingBottom: 70 }}></div>
 
-        {/* Sticky CTA */}
-        <div className="lib-cta-container">
-          <button className="lib-cta-button" onClick={handleBooking}>
-            <span className="material-symbols-outlined">calendar_month</span>
-            프로필 보기 & 지명하기
+      {/* Bottom Navigation */}
+      <nav className="lib-feed-link">
+        <button className="lib-feed-tab" onClick={goToFeed}>
+          <span className="material-symbols-outlined">home</span>
+          <span className="lib-feed-tab-label">Feed</span>
+        </button>
+        <button className="lib-feed-tab active">
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>person</span>
+          <span className="lib-feed-tab-label">Profile</span>
+        </button>
+        <button className="lib-feed-tab" onClick={() => { window.location.hash = '/'; }}>
+          <span className="material-symbols-outlined">language</span>
+          <span className="lib-feed-tab-label">Main Site</span>
+        </button>
+      </nav>
+
+      {/* Toast */}
+      {showToast && (
+        <div className="lib-toast">{toastMessage}</div>
+      )}
+
+      {/* Lightbox */}
+      {lightboxIndex !== null && gallery[lightboxIndex] && (
+        <div
+          className="lib-lightbox"
+          onClick={closeLightbox}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <button className="lib-lightbox-close" onClick={closeLightbox}>
+            <span className="material-symbols-outlined">close</span>
           </button>
+
+          <div className="lib-lightbox-counter">
+            {lightboxIndex + 1} / {gallery.length}
+          </div>
+
+          <div className="lib-lightbox-header" onClick={e => e.stopPropagation()}>
+            <img src={cca.image} alt="" className="lib-lightbox-avatar" />
+            <span className="lib-lightbox-author">{cca.nickname || cca.name}</span>
+          </div>
+
+          <div className="lib-lightbox-media" onClick={e => e.stopPropagation()}>
+            {gallery[lightboxIndex].type === 'video' ? (
+              <video src={gallery[lightboxIndex].url} controls autoPlay />
+            ) : (
+              <img src={gallery[lightboxIndex].url} alt={gallery[lightboxIndex].caption || ''} />
+            )}
+          </div>
+
+          {gallery[lightboxIndex].caption && (
+            <div className="lib-lightbox-footer" onClick={e => e.stopPropagation()}>
+              <span style={{ fontSize: 13, fontWeight: 800, marginRight: 6 }}>{cca.nickname || cca.name}</span>
+              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>{gallery[lightboxIndex].caption}</span>
+            </div>
+          )}
+
+          {gallery.length > 1 && (
+            <>
+              <button className="lib-lightbox-nav lib-lightbox-prev" onClick={e => { e.stopPropagation(); goToPrev(); }}>
+                <span className="material-symbols-outlined">chevron_left</span>
+              </button>
+              <button className="lib-lightbox-nav lib-lightbox-next" onClick={e => { e.stopPropagation(); goToNext(); }}>
+                <span className="material-symbols-outlined">chevron_right</span>
+              </button>
+            </>
+          )}
         </div>
-
-        {/* Toast Notification */}
-        {showToast && (
-          <div className="lib-toast">
-            {toastMessage}
-          </div>
-        )}
-
-        {/* ─── Lightbox Modal ─── */}
-        {lightboxIndex !== null && gallery[lightboxIndex] && (
-          <div 
-            className="lib-lightbox"
-            onClick={closeLightbox}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-          >
-            {/* Close button */}
-            <button className="lib-lightbox-close" onClick={closeLightbox}>
-              <span className="material-symbols-outlined">close</span>
-            </button>
-
-            {/* Counter */}
-            <div className="lib-lightbox-counter">
-              {lightboxIndex + 1} / {gallery.length}
-            </div>
-
-            {/* Image */}
-            <div className="lib-lightbox-content" onClick={(e) => e.stopPropagation()}>
-              <img 
-                src={gallery[lightboxIndex].url} 
-                alt={gallery[lightboxIndex].caption || ''} 
-                className="lib-lightbox-img"
-              />
-              {gallery[lightboxIndex].caption && (
-                <p className="lib-lightbox-caption">{gallery[lightboxIndex].caption}</p>
-              )}
-            </div>
-
-            {/* Navigation arrows */}
-            {gallery.length > 1 && (
-              <>
-                <button 
-                  className="lib-lightbox-nav lib-lightbox-prev"
-                  onClick={(e) => { e.stopPropagation(); goToPrev(); }}
-                >
-                  <span className="material-symbols-outlined">chevron_left</span>
-                </button>
-                <button 
-                  className="lib-lightbox-nav lib-lightbox-next"
-                  onClick={(e) => { e.stopPropagation(); goToNext(); }}
-                >
-                  <span className="material-symbols-outlined">chevron_right</span>
-                </button>
-              </>
-            )}
-
-            {/* Thumbnail strip */}
-            {gallery.length > 1 && (
-              <div className="lib-lightbox-thumbs">
-                {gallery.map((item, idx) => (
-                  <button
-                    key={idx}
-                    className={`lib-lightbox-thumb ${idx === lightboxIndex ? 'active' : ''}`}
-                    onClick={(e) => { e.stopPropagation(); setLightboxIndex(idx); }}
-                  >
-                    <img src={item.url} alt="" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 };

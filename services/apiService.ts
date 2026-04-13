@@ -1602,6 +1602,156 @@ export const apiService = {
       console.error('deleteCCAApplication error:', error);
       return { success: false, error: error.message };
     }
+  },
+
+  // ─── SNS Feed APIs ──────────────────────────────────────
+
+  async getFeed(page: number = 1, limit: number = 20, userId?: string): Promise<any> {
+    try {
+      let url = `${API_BASE}/gallery?feed=true&page=${page}&limit=${limit}`;
+      if (userId) url += `&userId=${encodeURIComponent(userId)}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch feed');
+      return await response.json();
+    } catch (error) {
+      console.error('getFeed error:', error);
+      return { items: [], page: 1, limit: 20, total: 0, hasMore: false };
+    }
+  },
+
+  async getGalleryItem(id: string): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE}/gallery/${id}`);
+      if (!response.ok) throw new Error('Failed to fetch gallery item');
+      return await response.json();
+    } catch (error) {
+      console.error('getGalleryItem error:', error);
+      return null;
+    }
+  },
+
+  // Gallery Item Likes
+  async getGalleryLikes(galleryId: string, visitorId?: string): Promise<{ count: number; liked: boolean }> {
+    try {
+      let url = `${API_BASE}/gallery-likes?galleryId=${encodeURIComponent(galleryId)}`;
+      if (visitorId) url += `&visitorId=${encodeURIComponent(visitorId)}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch gallery likes');
+      return await response.json();
+    } catch (error) {
+      console.error('getGalleryLikes error:', error);
+      return { count: 0, liked: false };
+    }
+  },
+
+  async toggleGalleryLike(galleryId: string, visitorId: string): Promise<{ count: number; liked: boolean }> {
+    try {
+      const response = await fetch(`${API_BASE}/gallery-likes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ galleryId, visitorId }),
+      });
+      if (!response.ok) throw new Error('Failed to toggle gallery like');
+      return await response.json();
+    } catch (error) {
+      console.error('toggleGalleryLike error:', error);
+      return { count: 0, liked: false };
+    }
+  },
+
+  // Gallery Comments
+  async getGalleryComments(galleryId: string): Promise<any[]> {
+    try {
+      const response = await fetch(`${API_BASE}/gallery-comments?galleryId=${encodeURIComponent(galleryId)}`);
+      if (!response.ok) throw new Error('Failed to fetch gallery comments');
+      return await response.json();
+    } catch (error) {
+      console.error('getGalleryComments error:', error);
+      return [];
+    }
+  },
+
+  async createGalleryComment(data: { galleryId: string; authorName: string; authorId?: string; authorImage?: string; content: string }): Promise<{ success: boolean; id?: string; commentsCount?: number }> {
+    try {
+      const response = await fetch(`${API_BASE}/gallery-comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to create gallery comment');
+      return await response.json();
+    } catch (error: any) {
+      console.error('createGalleryComment error:', error);
+      return { success: false };
+    }
+  },
+
+  async deleteGalleryComment(id: string): Promise<boolean> {
+    try {
+      const response = await fetch(`${API_BASE}/gallery-comments?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('deleteGalleryComment error:', error);
+      return false;
+    }
+  },
+
+  // Gallery Comment Votes
+  async getGalleryCommentVotes(galleryId: string, userId: string): Promise<any[]> {
+    try {
+      const url = `${API_BASE}/gallery-comment-votes?galleryId=${encodeURIComponent(galleryId)}&userId=${encodeURIComponent(userId)}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch comment votes');
+      return await response.json();
+    } catch (error) {
+      console.error('getGalleryCommentVotes error:', error);
+      return [];
+    }
+  },
+
+  async toggleGalleryCommentVote(commentId: string, userId: string, voteType: 'like' | 'dislike'): Promise<any> {
+    try {
+      const response = await fetch(`${API_BASE}/gallery-comment-votes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ commentId, userId, voteType }),
+      });
+      if (!response.ok) throw new Error('Failed to toggle comment vote');
+      return await response.json();
+    } catch (error) {
+      console.error('toggleGalleryCommentVote error:', error);
+      return { success: false };
+    }
+  },
+
+  // CCA Follows
+  async checkCCAFollow(userId: string, ccaId: string): Promise<{ isFollowing: boolean }> {
+    try {
+      const url = `${API_BASE}/cca-follows?userId=${encodeURIComponent(userId)}&ccaId=${encodeURIComponent(ccaId)}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to check follow');
+      return await response.json();
+    } catch (error) {
+      console.error('checkCCAFollow error:', error);
+      return { isFollowing: false };
+    }
+  },
+
+  async toggleCCAFollow(userId: string, ccaId: string): Promise<{ isFollowing: boolean }> {
+    try {
+      const response = await fetch(`${API_BASE}/cca-follows`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, ccaId }),
+      });
+      if (!response.ok) throw new Error('Failed to toggle follow');
+      return await response.json();
+    } catch (error) {
+      console.error('toggleCCAFollow error:', error);
+      return { isFollowing: false };
+    }
   }
 };
 
