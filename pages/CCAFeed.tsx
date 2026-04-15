@@ -110,6 +110,16 @@ const CCAFeed: React.FC = () => {
   const [exploreSearch, setExploreSearch] = useState('');
   const [exploreItems, setExploreItems] = useState<FeedItem[]>([]);
 
+  // Vip login prompt
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  const goToLogin = () => {
+    const baseUrl = window.location.hostname.includes('feed')
+        ? window.location.href.replace(window.location.host, window.location.host.replace('feed.', ''))
+        : window.location.origin;
+    window.location.href = `${baseUrl}/#/login`;
+  };
+
   // ─── Load Feed ───
   const loadFeed = useCallback(async (pageNum: number, append: boolean = false) => {
     if (pageNum === 1) setLoading(true);
@@ -211,7 +221,11 @@ const CCAFeed: React.FC = () => {
 
   // ─── Like Toggle ───
   const handleLike = async (itemId: string) => {
-    const visitorId = user?.id || getVisitorId();
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+    const visitorId = user.id;
     const wasLiked = likedItems[itemId];
 
     // Optimistic update
@@ -230,6 +244,10 @@ const CCAFeed: React.FC = () => {
 
     if (now - last < 300) {
       // Double tap!
+      if (!user) {
+        setShowLoginModal(true);
+        return;
+      }
       if (!likedItems[itemId]) {
         handleLike(itemId);
       }
@@ -246,7 +264,7 @@ const CCAFeed: React.FC = () => {
     const text = commentTexts[itemId]?.trim();
     if (!text) return;
     if (!user) {
-      alert('댓글을 작성하려면 로그인이 필요합니다.');
+      setShowLoginModal(true);
       return;
     }
 
@@ -294,7 +312,11 @@ const CCAFeed: React.FC = () => {
 
   // ─── Submit Comment (modal) ───
   const handleModalComment = async () => {
-    if (!selectedPost || !modalCommentText.trim() || !user) return;
+    if (!selectedPost || !modalCommentText.trim()) return;
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
 
     const result = await apiService.createGalleryComment({
       galleryId: selectedPost.id,
@@ -339,7 +361,7 @@ const CCAFeed: React.FC = () => {
   // ─── Comment Vote Toggle ───
   const handleCommentVote = async (commentId: string, voteType: 'like' | 'dislike') => {
     if (!user) {
-      alert('로그인이 필요합니다.');
+      setShowLoginModal(true);
       return;
     }
 
@@ -380,7 +402,7 @@ const CCAFeed: React.FC = () => {
   const handleFollowToggle = async (ccaId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!user) {
-      alert('로그인이 필요합니다.');
+      setShowLoginModal(true);
       return;
     }
     
@@ -414,7 +436,7 @@ const CCAFeed: React.FC = () => {
               <span className="material-symbols-outlined">person</span>
             </button>
           ) : (
-            <button className="feed-header-btn" onClick={() => { window.location.hash = '/login'; }}>
+            <button className="feed-header-btn" onClick={goToLogin}>
               <span className="material-symbols-outlined">login</span>
             </button>
           )}
@@ -801,6 +823,55 @@ const CCAFeed: React.FC = () => {
                 Post
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── VIP Login Modal ─── */}
+      {showLoginModal && (
+        <div className="feed-modal-overlay" onClick={() => setShowLoginModal(false)} style={{ zIndex: 9999 }}>
+          <div className="feed-modal-card" onClick={e => e.stopPropagation()} style={{ padding: '32px', textAlign: 'center', height: 'auto', borderRadius: '24px', maxWidth: '340px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 64, height: 64, background: '#eebd2b1a', borderRadius: '20px', color: '#eebd2b', marginBottom: 20 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 32 }}>stars</span>
+            </div>
+            <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8, letterSpacing: '-0.03em' }}>Join the VIP Lounge</h3>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5, marginBottom: 28 }}>
+              JTVStar 회원으로 로그인하고<br/>CCA와 즐겁게 소통해보세요!
+            </p>
+            <button 
+              onClick={goToLogin}
+              style={{
+                width: '100%',
+                padding: '16px',
+                background: '#eebd2b',
+                color: '#1b180d',
+                borderRadius: '16px',
+                fontWeight: 800,
+                fontSize: 14,
+                cursor: 'pointer',
+                border: 'none',
+                boxShadow: '0 8px 24px rgba(238, 189, 43, 0.2)'
+              }}
+            >
+              메인 사이트로 이동하여 로그인
+            </button>
+            <button 
+              onClick={() => setShowLoginModal(false)}
+              style={{
+                width: '100%',
+                padding: '16px',
+                background: 'transparent',
+                color: 'rgba(255,255,255,0.4)',
+                borderRadius: '16px',
+                fontWeight: 600,
+                fontSize: 13,
+                cursor: 'pointer',
+                border: 'none',
+                marginTop: 8
+              }}
+            >
+              나중에 하기
+            </button>
           </div>
         </div>
       )}
